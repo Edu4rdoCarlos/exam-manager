@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime? @default(now()) @map("created_at")
+
+  exams Exam[]
+
+  @@map("users")
+}
+
+model Question {
+  id        String    @id @default(uuid()) @db.Uuid
+  statement String
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  alternatives         Alternative[]
+  examQuestions        ExamQuestion[]
+  examVersionQuestions ExamVersionQuestion[]
+  studentAnswers       StudentAnswer[]
+
+  @@map("questions")
+}
+
+model Alternative {
+  id          String  @id @default(uuid()) @db.Uuid
+  questionId  String  @map("question_id") @db.Uuid
+  description String
+  isCorrect   Boolean @map("is_correct")
+
+  question                Question                 @relation(fields: [questionId], references: [id])
+  examVersionAlternatives ExamVersionAlternative[]
+
+  @@map("alternatives")
+}
+
+model Exam {
+  id           String       @id @default(uuid()) @db.Uuid
+  title        String
+  subject      String
+  teacherId    String       @map("teacher_id") @db.Uuid
+  examDate     DateTime?    @map("exam_date") @db.Date
+  answerFormat AnswerFormat @map("answer_format")
+  createdAt    DateTime?    @default(now()) @map("created_at")
+
+  teacher       User          @relation(fields: [teacherId], references: [id])
+  examQuestions ExamQuestion[]
+  examVersions  ExamVersion[]
+  corrections   Correction[]
+
+  @@map("exams")
+}
+
+enum AnswerFormat {
+  letters
+  powers_of_two
+}
+
+model ExamQuestion {
+  id         String @id @default(uuid()) @db.Uuid
+  examId     String @map("exam_id") @db.Uuid
+  questionId String @map("question_id") @db.Uuid
+  position   Int
+
+  exam     Exam     @relation(fields: [examId], references: [id])
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@map("exam_questions")
+}
+
+model ExamVersion {
+  id            String    @id @default(uuid()) @db.Uuid
+  examId        String    @map("exam_id") @db.Uuid
+  versionNumber Int       @map("version_number")
+  createdAt     DateTime? @default(now()) @map("created_at")
+
+  exam                 Exam                  @relation(fields: [examId], references: [id])
+  examVersionQuestions ExamVersionQuestion[]
+  studentAnswers       StudentAnswer[]
+  grades               Grade[]
+  answerKeys           AnswerKey[]
+
+  @@map("exam_versions")
+}
+
+model ExamVersionQuestion {
+  id            String @id @default(uuid()) @db.Uuid
+  examVersionId String @map("exam_version_id") @db.Uuid
+  questionId    String @map("question_id") @db.Uuid
+  position      Int
+
+  examVersion             ExamVersion              @relation(fields: [examVersionId], references: [id])
+  question                Question                 @relation(fields: [questionId], references: [id])
+  examVersionAlternatives ExamVersionAlternative[]
+  answerKeys              AnswerKey[]
+
+  @@map("exam_version_questions")
+}
+
+model ExamVersionAlternative {
+  id                    String @id @default(uuid()) @db.Uuid
+  examVersionQuestionId String @map("exam_version_question_id") @db.Uuid
+  alternativeId         String @map("alternative_id") @db.Uuid
+  position              Int
+  label                 String
+
+  examVersionQuestion ExamVersionQuestion @relation(fields: [examVersionQuestionId], references: [id])
+  alternative         Alternative         @relation(fields: [alternativeId], references: [id])
+
+  @@map("exam_version_alternatives")
+}
+
+model Student {
+  id   String @id @default(uuid()) @db.Uuid
+  name String
+  cpf  String @unique
+
+  studentAnswers StudentAnswer[]
+  grades         Grade[]
+
+  @@map("students")
+}
+
+model StudentAnswer {
+  id            String @id @default(uuid()) @db.Uuid
+  studentId     String @map("student_id") @db.Uuid
+  examVersionId String @map("exam_version_id") @db.Uuid
+  questionId    String @map("question_id") @db.Uuid
+  answer        String
+
+  student     Student     @relation(fields: [studentId], references: [id])
+  examVersion ExamVersion @relation(fields: [examVersionId], references: [id])
+  question    Question    @relation(fields: [questionId], references: [id])
+
+  @@map("student_answers")
+}
+
+model Correction {
+  id             String         @id @default(uuid()) @db.Uuid
+  examId         String         @map("exam_id") @db.Uuid
+  correctionMode CorrectionMode @map("correction_mode")
+  createdAt      DateTime?      @default(now()) @map("created_at")
+
+  exam   Exam    @relation(fields: [examId], references: [id])
+  grades Grade[]
+
+  @@map("corrections")
+}
+
+enum CorrectionMode {
+  strict
+  lenient
+}
+
+model Grade {
+  id            String  @id @default(uuid()) @db.Uuid
+  studentId     String  @map("student_id") @db.Uuid
+  examVersionId String  @map("exam_version_id") @db.Uuid
+  correctionId  String  @map("correction_id") @db.Uuid
+  score         Decimal
+
+  student     Student    @relation(fields: [studentId], references: [id])
+  examVersion ExamVersion @relation(fields: [examVersionId], references: [id])
+  correction  Correction  @relation(fields: [correctionId], references: [id])
+
+  @@map("grades")
+}
+
+model AnswerKey {
+  id                    String @id @default(uuid()) @db.Uuid
+  examVersionId         String @map("exam_version_id") @db.Uuid
+  examVersionQuestionId String @map("exam_version_question_id") @db.Uuid
+  correctAnswer         String @map("correct_answer")
+
+  examVersion         ExamVersion         @relation(fields: [examVersionId], references: [id])
+  examVersionQuestion ExamVersionQuestion @relation(fields: [examVersionQuestionId], references: [id])
+
+  @@map("answer_keys")
+}
