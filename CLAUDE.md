@@ -6,13 +6,14 @@ You are a senior software engineer. Your responsibility is to deliver clean, cor
 
 ## Architecture
 
-All code must follow **Hexagonal Architecture** (Ports & Adapters):
+All code must follow **Clean Architecture**:
 
-- **Domain** — pure business logic, no framework dependencies, no I/O
-- **Application** — use cases that orchestrate domain logic through ports
-- **Adapters** — concrete implementations of ports (HTTP controllers, repositories, PDF generators, CSV parsers, etc.)
+- **Domain** — pure entity, `readonly` fields, no framework, no ports
+- **Application** — repository port (interface) + service (use cases), depends on domain only
+- **Presentation** — NestJS controller + DTOs, depends on application only
+- **Infrastructure** — Prisma repository adapter, implements the application port
 
-Directory layout must reflect these layers explicitly. Domain must never import from adapters.
+Module structure: `src/modules/{auth,users,students,exams}` — each module may have sub-features (e.g. `exams/exam`, `exams/versions`, `exams/keys`, `exams/corrections`). Shared code lives in `src/shared/`.
 
 ## Design Principles
 
@@ -53,19 +54,21 @@ Apply **SOLID** at all times:
 - **Backend:** NestJS + TypeScript
 - **Test:** Cucumber.js for acceptance tests, Jest for unit/integration tests
 
-## Reference Docs
+## Available Agents
 
-Detailed standards are in `docs/`:
+Autonomous subprocesses for analysis tasks — invoked by Claude when needed:
 
-- `docs/hexagonal-architecture.md` — directory structure, layer rules, import boundaries
-- `docs/gherkin-conventions.md` — scenario design, tags, coverage requirements, example
-- `docs/review-checklist.md` — full checklist + issue report format
+- `reviewer` — audits code quality across Clean Architecture rules, SOLID, and TypeScript standards
+- `test-runner` — runs Jest/Cucumber, diagnoses failures with root cause analysis
+- `db-validator` — checks consistency between domain entities and Prisma schema
+- `architect` — expert guidance on project structure, layer placement, and architectural decisions
 
 ## Available Skills (Slash Commands)
 
-- `/new-feature <name> <description>` — scaffold a complete feature per `docs/hexagonal-architecture.md`
-- `/write-gherkin <feature> <requirements>` — generate `.feature` file per `docs/gherkin-conventions.md`
-- `/review [file or module]` — audit per `docs/review-checklist.md`, outputs verdict by severity
+- `/new-feature <name> <description>` — scaffold a complete feature (hexagonal architecture, Prisma, JWT, shadcn/ui)
+- `/write-gherkin <feature> <requirements>` — generate `.feature` file with Gherkin scenarios
+- `/prisma-migration <entity>` — generate Prisma model, migration SQL, and repository adapter
+- `/write-tests <file>` — generate Jest unit tests for a use case or domain entity
 
 ## What NOT to do
 
