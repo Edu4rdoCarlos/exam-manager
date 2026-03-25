@@ -3,11 +3,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { apiKeyMiddleware } from './shared/middleware/apiKeyMiddleware';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  app.use(apiKeyMiddleware);
 
   const config = new DocumentBuilder()
     .setTitle('Exam Manager API')
