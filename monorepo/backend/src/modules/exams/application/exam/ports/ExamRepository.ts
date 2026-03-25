@@ -36,6 +36,7 @@ export interface ExamRepository {
   findById(id: string): Promise<Exam | null>;
   findByIdWithDetails(id: string): Promise<ExamWithDetails | null>;
   findAll(): Promise<Exam[]>;
+  findByTeacherId(teacherId: string): Promise<Exam[]>;
   save(data: CreateExamData): Promise<Exam>;
   update(id: string, data: UpdateExamData): Promise<Exam | null>;
   delete(id: string): Promise<void>;

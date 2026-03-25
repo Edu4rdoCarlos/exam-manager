@@ -13,6 +13,7 @@ module.exports = {
   testEnvironment: 'node',
   moduleNameMapper: {
     '^@exam-manager/database$': '<rootDir>/../database/src/generated/client',
+    '^pdfmake/src/printer$': '<rootDir>/test/mocks/pdfmake-printer.mock.js',
   },
   testTimeout: 30000,
 };

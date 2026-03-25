@@ -6,7 +6,8 @@ export class PdfMakeExamPdfAdapter implements ExamPdfPort {
   async generate(data: ExamPdfData): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const PdfPrinter = require('pdfmake/src/printer');
+      const PdfPrinterModule = require('pdfmake/src/printer');
+      const PdfPrinter = PdfPrinterModule.default ?? PdfPrinterModule;
 
       const fonts = {
         Helvetica: {

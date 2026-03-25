@@ -59,6 +59,11 @@ export class PrismaExamRepository implements ExamRepository {
     return rows.map((r) => this.toDomain(r as ExamRow));
   }
 
+  async findByTeacherId(teacherId: string): Promise<Exam[]> {
+    const rows = await this.prisma.exam.findMany({ where: { teacherId } });
+    return rows.map((r) => this.toDomain(r as ExamRow));
+  }
+
   async save(data: CreateExamData): Promise<Exam> {
     const row = await this.prisma.exam.create({
       data: {
@@ -110,6 +115,7 @@ export class PrismaExamRepository implements ExamRepository {
   }
 
   async delete(id: string): Promise<void> {
+    await this.prisma.examQuestion.deleteMany({ where: { examId: id } });
     await this.prisma.exam.delete({ where: { id } });
   }
 

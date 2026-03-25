@@ -31,6 +31,7 @@ import { CsvStudentAnswerParserAdapter } from './infrastructure/student-answer/C
 // Application services
 import { CreateExam } from './application/exam/services/CreateExam';
 import { GetExam } from './application/exam/services/GetExam';
+import { GetExamsByTeacher } from './application/exam/services/GetExamsByTeacher';
 import { UpdateExam } from './application/exam/services/UpdateExam';
 import { DeleteExam } from './application/exam/services/DeleteExam';
 import { CreateExamVersion } from './application/versions/services/CreateExamVersion';
@@ -83,7 +84,7 @@ import { GradeController } from './presentation/http/grade/GradeController';
     { provide: EXAM_PDF_PORT, useClass: PdfMakeExamPdfAdapter },
     { provide: ANSWER_KEY_CSV_PORT, useClass: CsvAnswerKeyExportAdapter },
     { provide: STUDENT_ANSWER_CSV_PARSER_PORT, useClass: CsvStudentAnswerParserAdapter },
-    CreateExam, GetExam, UpdateExam, DeleteExam,
+    CreateExam, GetExam, GetExamsByTeacher, UpdateExam, DeleteExam,
     CreateExamVersion, GetExamVersion, GenerateExamVersionPdf,
     CreateQuestion, GetQuestion, GetAllQuestions, UpdateQuestion, DeleteQuestion,
     CreateAnswerKeys, GetAnswerKeys, ExportAnswerKeyCsv,
@@ -91,5 +92,6 @@ import { GradeController } from './presentation/http/grade/GradeController';
     CreateCorrection, GetCorrection, ApplyCorrection, CorrectExamFromCsv,
     GetGrades, GetGradeReport,
   ],
+  exports: [GetExamsByTeacher],
 })
 export class ExamsModule {}

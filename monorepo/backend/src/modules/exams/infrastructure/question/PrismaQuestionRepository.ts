@@ -68,6 +68,7 @@ export class PrismaQuestionRepository implements QuestionRepository {
   }
 
   async delete(id: string): Promise<void> {
+    await this.prisma.alternative.deleteMany({ where: { questionId: id } });
     await this.prisma.question.delete({ where: { id } });
   }
 
