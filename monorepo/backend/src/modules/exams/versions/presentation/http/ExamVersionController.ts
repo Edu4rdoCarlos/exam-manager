@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/JwtAuthGuard';
 import { CreateExamVersion } from '../../application/services/CreateExamVersion';
 import { GetExamVersion } from '../../application/services/GetExamVersion';
+import { HttpResponse, HttpResponseBody, HttpPaginatedResponseBody } from '../../../../../shared/utils/HttpResponse';
 import { CreateExamVersionDto } from './dto/CreateExamVersionDto';
 import { CreateExamVersionDocs, FindExamVersionsByExamDocs, GetExamVersionDocs } from './docs/exam-versions.docs';
 
@@ -18,23 +19,29 @@ export class ExamVersionController {
 
   @Post()
   @CreateExamVersionDocs()
-  async create(@Body() dto: CreateExamVersionDto): Promise<unknown> {
+  async create(@Body() dto: CreateExamVersionDto): Promise<HttpResponseBody<unknown>> {
     const result = await this.createExamVersion.execute(dto);
     if (!result.ok) throw new NotFoundException(result.error);
-    return result.value;
+    return HttpResponse.of(result.value);
   }
 
   @Get()
   @FindExamVersionsByExamDocs()
-  async findByExam(@Query('examId') examId: string): Promise<unknown> {
-    return this.getExamVersion.findByExamId(examId);
+  async findByExam(@Query('examId') examId: string): Promise<HttpPaginatedResponseBody<unknown>> {
+    const items = (await this.getExamVersion.findByExamId(examId)) as unknown[];
+    return HttpResponse.paginated(items, {
+      total: items.length,
+      page: 1,
+      limit: items.length,
+      totalPages: 1,
+    });
   }
 
   @Get(':id')
   @GetExamVersionDocs()
-  async findOne(@Param('id') id: string): Promise<unknown> {
+  async findOne(@Param('id') id: string): Promise<HttpResponseBody<unknown>> {
     const result = await this.getExamVersion.execute(id);
     if (!result.ok) throw new NotFoundException(result.error);
-    return result.value;
+    return HttpResponse.of(result.value);
   }
 }

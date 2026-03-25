@@ -1,21 +1,17 @@
 import { applyDecorators } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiNotFoundResponse,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiNotFoundResponse } from '@nestjs/swagger';
+import { ApiDataResponse } from '../../../../../../shared/utils/swagger';
 import { ExamResponseDto } from '../dto/ExamResponseDto';
 
 export const CreateExamDocs = () =>
   applyDecorators(
     ApiOperation({ summary: 'Create a new exam' }),
-    ApiCreatedResponse({ type: ExamResponseDto }),
+    ApiDataResponse(ExamResponseDto, 201),
   );
 
 export const GetExamDocs = () =>
   applyDecorators(
     ApiOperation({ summary: 'Get an exam by ID' }),
-    ApiOkResponse({ type: ExamResponseDto }),
+    ApiDataResponse(ExamResponseDto),
     ApiNotFoundResponse({ description: 'Exam not found' }),
   );

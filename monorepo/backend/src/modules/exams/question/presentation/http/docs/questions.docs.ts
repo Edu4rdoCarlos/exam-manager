@@ -1,27 +1,23 @@
 import { applyDecorators } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiNotFoundResponse,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiNotFoundResponse } from '@nestjs/swagger';
+import { ApiDataResponse, ApiPaginatedResponse } from '../../../../../../shared/utils/swagger';
 import { QuestionResponseDto } from '../dto/QuestionResponseDto';
 
 export const CreateQuestionDocs = () =>
   applyDecorators(
     ApiOperation({ summary: 'Create a new question with alternatives' }),
-    ApiCreatedResponse({ type: QuestionResponseDto }),
+    ApiDataResponse(QuestionResponseDto, 201),
   );
 
 export const GetAllQuestionsDocs = () =>
   applyDecorators(
     ApiOperation({ summary: 'List all questions' }),
-    ApiOkResponse({ type: QuestionResponseDto, isArray: true }),
+    ApiPaginatedResponse(QuestionResponseDto),
   );
 
 export const GetQuestionDocs = () =>
   applyDecorators(
     ApiOperation({ summary: 'Get a question by ID' }),
-    ApiOkResponse({ type: QuestionResponseDto }),
+    ApiDataResponse(QuestionResponseDto),
     ApiNotFoundResponse({ description: 'Question not found' }),
   );

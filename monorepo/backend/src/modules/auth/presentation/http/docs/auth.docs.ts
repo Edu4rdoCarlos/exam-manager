@@ -1,10 +1,11 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiOkResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiDataResponse } from '../../../../../shared/utils/swagger';
 import { AuthTokenResponseDto } from '../dto/AuthTokenResponseDto';
 
 export const LoginDocs = () =>
   applyDecorators(
     ApiOperation({ summary: 'Authenticate and receive a JWT token' }),
-    ApiOkResponse({ type: AuthTokenResponseDto }),
+    ApiDataResponse(AuthTokenResponseDto),
     ApiUnauthorizedResponse({ description: 'Invalid credentials' }),
   );

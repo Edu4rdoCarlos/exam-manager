@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/JwtAuthGuard';
 import { CreateExam } from '../../application/services/CreateExam';
 import { GetExam } from '../../application/services/GetExam';
+import { HttpResponse, HttpResponseBody } from '../../../../../shared/utils/HttpResponse';
 import { CreateExamDto } from './dto/CreateExamDto';
 import { CreateExamDocs, GetExamDocs } from './docs/exams.docs';
 
@@ -18,7 +19,7 @@ export class ExamController {
 
   @Post()
   @CreateExamDocs()
-  async create(@Body() dto: CreateExamDto): Promise<unknown> {
+  async create(@Body() dto: CreateExamDto): Promise<HttpResponseBody<unknown>> {
     const result = await this.createExam.execute({
       title: dto.title,
       subject: dto.subject,
@@ -28,14 +29,14 @@ export class ExamController {
       questionIds: dto.questionIds,
     });
     if (!result.ok) throw new Error('Unexpected failure');
-    return result.value;
+    return HttpResponse.of(result.value);
   }
 
   @Get(':id')
   @GetExamDocs()
-  async findOne(@Param('id') id: string): Promise<unknown> {
+  async findOne(@Param('id') id: string): Promise<HttpResponseBody<unknown>> {
     const result = await this.getExam.execute(id);
     if (!result.ok) throw new NotFoundException(result.error);
-    return result.value;
+    return HttpResponse.of(result.value);
   }
 }

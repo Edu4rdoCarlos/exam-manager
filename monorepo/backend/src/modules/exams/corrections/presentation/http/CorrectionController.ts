@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/JwtAuthGuar
 import { CreateCorrection } from '../../application/services/CreateCorrection';
 import { GetCorrection } from '../../application/services/GetCorrection';
 import { ApplyCorrection } from '../../application/services/ApplyCorrection';
+import { HttpResponse, HttpResponseBody } from '../../../../../shared/utils/HttpResponse';
 import { CreateCorrectionDto } from './dto/CreateCorrectionDto';
 import { CreateCorrectionDocs, GetCorrectionDocs, ApplyCorrectionDocs } from './docs/corrections.docs';
 
@@ -20,25 +21,25 @@ export class CorrectionController {
 
   @Post()
   @CreateCorrectionDocs()
-  async create(@Body() dto: CreateCorrectionDto): Promise<unknown> {
+  async create(@Body() dto: CreateCorrectionDto): Promise<HttpResponseBody<unknown>> {
     const result = await this.createCorrection.execute(dto);
     if (!result.ok) throw new NotFoundException(result.error);
-    return result.value;
+    return HttpResponse.of(result.value);
   }
 
   @Get(':id')
   @GetCorrectionDocs()
-  async findOne(@Param('id') id: string): Promise<unknown> {
+  async findOne(@Param('id') id: string): Promise<HttpResponseBody<unknown>> {
     const result = await this.getCorrection.execute(id);
     if (!result.ok) throw new NotFoundException(result.error);
-    return result.value;
+    return HttpResponse.of(result.value);
   }
 
   @Post(':id/apply')
   @ApplyCorrectionDocs()
-  async apply(@Param('id') id: string): Promise<unknown> {
+  async apply(@Param('id') id: string): Promise<HttpResponseBody<unknown>> {
     const result = await this.applyCorrection.execute({ correctionId: id });
     if (!result.ok) throw new NotFoundException(result.error);
-    return result.value;
+    return HttpResponse.of(result.value);
   }
 }
