@@ -1,0 +1,12 @@
+node_modules
+monorepo/backend/dist
+monorepo/backend/node_modules
+monorepo/database/node_modules
+monorepo/database/src/generated
+monorepo/frontend
+.git
+.gitignore
+*.md
+docker-compose.yml
+.env
+.env.*
