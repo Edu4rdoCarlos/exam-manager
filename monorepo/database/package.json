@@ -1,8 +1,7 @@
 {
   "name": "@exam-manager/database",
   "version": "0.1.0",
-  "main": "src/generated/client/index.js",
-  "types": "src/generated/client/index.d.ts",
+  "main": "src/index.ts",
   "scripts": {
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
