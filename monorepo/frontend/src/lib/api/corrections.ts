@@ -38,6 +38,11 @@ export async function applyCorrectionFromCsv(
   return res.data;
 }
 
+export async function getCorrectionsByExam(examId: string): Promise<Correction[]> {
+  const res = await apiRequest<PaginatedResponse<Correction>>(`/corrections?examId=${examId}`);
+  return res.data;
+}
+
 export async function getGradeReport(correctionId: string): Promise<GradeReport[]> {
   const res = await apiRequest<PaginatedResponse<GradeReport>>(
     `/grades/report/correction/${correctionId}`

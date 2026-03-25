@@ -5,14 +5,16 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getExam } from "@/lib/api/exams";
-import { getVersionsByExam, createVersion, getVersionPdfUrl } from "@/lib/api/versions";
+import { getVersionsByExam, createVersion } from "@/lib/api/versions";
 import {
   createCorrection,
   applyCorrection,
   applyCorrectionFromCsv,
   getGradeReport,
+  getCorrectionsByExam,
 } from "@/lib/api/corrections";
-import { getAnswerKeysByVersion, createAnswerKeys } from "@/lib/api/keys";
+import { getAnswerKeysByVersion, createAnswerKeys, getAnswerKeyCsvUrl } from "@/lib/api/keys";
+import { downloadApiFile } from "@/lib/api/client";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/primitives/button";
 import { Input } from "@/components/primitives/input";
@@ -192,7 +194,6 @@ export default function ExamDetailPage() {
   const [createCorrectionOpen, setCreateCorrectionOpen] = useState(false);
   const [correctionMode, setCorrectionMode] = useState<"strict" | "lenient">("strict");
   const [csvCorrectionId, setCsvCorrectionId] = useState<string | null>(null);
-  const [localCorrections, setLocalCorrections] = useState<Correction[]>([]);
   const [selectedCorrectionId, setSelectedCorrectionId] = useState<string | null>(null);
 
   const { data: exam, isPending: examPending } = useQuery({
@@ -203,6 +204,11 @@ export default function ExamDetailPage() {
   const { data: versionsRes, isPending: versionsPending } = useQuery({
     queryKey: ["versions", id],
     queryFn: () => getVersionsByExam(id),
+  });
+
+  const { data: correctionsRes, isPending: correctionsPending } = useQuery({
+    queryKey: ["corrections", id],
+    queryFn: () => getCorrectionsByExam(id),
   });
 
   const { data: gradeReport, isPending: gradesPending } = useQuery({
@@ -224,8 +230,8 @@ export default function ExamDetailPage() {
 
   const createCorrectionMutation = useMutation({
     mutationFn: createCorrection,
-    onSuccess: (correction) => {
-      setLocalCorrections((prev) => [...prev, correction]);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["corrections", id] });
       toast.success("Correção criada");
       setCreateCorrectionOpen(false);
     },
@@ -251,6 +257,7 @@ export default function ExamDetailPage() {
   });
 
   const versions = versionsRes?.data ?? [];
+  const corrections: Correction[] = correctionsRes ?? [];
 
   if (examPending) {
     return (
@@ -337,15 +344,18 @@ export default function ExamDetailPage() {
                         <TableCell>{formatDate(v.createdAt)}</TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="outline" size="sm" asChild>
-                              <a
-                                href={getVersionPdfUrl(v.id)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <FileDown className="h-4 w-4 mr-1" />
-                                PDF
-                              </a>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                downloadApiFile(
+                                  `/exam-versions/${v.id}/pdf`,
+                                  `prova-versao-${v.versionNumber}.pdf`
+                                ).catch(() => toast.error("Erro ao baixar PDF"))
+                              }
+                            >
+                              <FileDown className="h-4 w-4 mr-1" />
+                              PDF
                             </Button>
                             <Button
                               variant="outline"
@@ -376,7 +386,7 @@ export default function ExamDetailPage() {
               </Button>
             </CardHeader>
             <CardContent className="p-0">
-              {localCorrections.length === 0 ? (
+              {corrections.length === 0 ? (
                 <EmptyState
                   message="Nenhuma correção criada"
                   description="Crie uma correção para calcular as notas dos alunos"
@@ -397,7 +407,7 @@ export default function ExamDetailPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {localCorrections.map((c) => (
+                    {corrections.map((c) => (
                       <TableRow key={c.id}>
                         <TableCell>
                           <Badge variant={c.correctionMode === "strict" ? "default" : "secondary"}>
@@ -457,7 +467,7 @@ export default function ExamDetailPage() {
               <CardTitle>Notas</CardTitle>
             </CardHeader>
             <CardContent>
-              {localCorrections.length === 0 ? (
+              {corrections.length === 0 ? (
                 <EmptyState
                   message="Nenhuma correção disponível"
                   description="Crie e aplique uma correção para ver as notas"
@@ -474,7 +484,7 @@ export default function ExamDetailPage() {
                         <SelectValue placeholder="Selecione uma correção" />
                       </SelectTrigger>
                       <SelectContent>
-                        {localCorrections.map((c, i) => (
+                        {corrections.map((c, i) => (
                           <SelectItem key={c.id} value={c.id}>
                             Correção {i + 1} —{" "}
                             {c.correctionMode === "strict" ? "Estrita" : "Leniente"}

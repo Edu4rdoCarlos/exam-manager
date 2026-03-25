@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -14,6 +15,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/JwtAuthGuard';
 import { CreateCorrection } from '../../../application/corrections/services/CreateCorrection';
 import { GetCorrection } from '../../../application/corrections/services/GetCorrection';
+import { GetCorrectionsByExam } from '../../../application/corrections/services/GetCorrectionsByExam';
 import { ApplyCorrection } from '../../../application/corrections/services/ApplyCorrection';
 import { CorrectExamFromCsv } from '../../../application/corrections/services/CorrectExamFromCsv';
 import { HttpResponse, HttpResponseBody } from '../../../../../shared/utils/HttpResponse';
@@ -22,6 +24,7 @@ import { CreateCorrectionDto } from './dto/CreateCorrectionDto';
 import {
   CreateCorrectionDocs,
   GetCorrectionDocs,
+  GetCorrectionsByExamDocs,
   ApplyCorrectionDocs,
   ApplyFromCsvDocs,
 } from './docs/corrections.docs';
@@ -34,6 +37,7 @@ export class CorrectionController {
   constructor(
     private readonly createCorrection: CreateCorrection,
     private readonly getCorrection: GetCorrection,
+    private readonly getCorrectionsByExam: GetCorrectionsByExam,
     private readonly applyCorrection: ApplyCorrection,
     private readonly correctExamFromCsv: CorrectExamFromCsv,
   ) {}
@@ -45,6 +49,13 @@ export class CorrectionController {
     if (!result.ok) throw new NotFoundException(result.error);
     const c = result.value;
     return HttpResponse.of(new CorrectionResponseDto(c.id, c.examId, c.correctionMode, c.createdAt ?? null));
+  }
+
+  @Get()
+  @GetCorrectionsByExamDocs()
+  async findByExam(@Query('examId') examId: string): Promise<HttpResponseBody<CorrectionResponseDto[]>> {
+    const corrections = await this.getCorrectionsByExam.execute(examId);
+    return HttpResponse.of(corrections.map((c) => new CorrectionResponseDto(c.id, c.examId, c.correctionMode, c.createdAt ?? null)));
   }
 
   @Get(':id')

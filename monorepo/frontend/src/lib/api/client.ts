@@ -63,3 +63,29 @@ export async function apiRequest<T>(
 
   return data as T;
 }
+
+export async function downloadApiFile(path: string, filename: string): Promise<void> {
+  const token = getToken();
+
+  const headers: Record<string, string> = {
+    "x-api-key": API_KEY,
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_URL}${path}`, { headers });
+
+  if (!response.ok) {
+    throw new Error("Erro ao baixar arquivo");
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}

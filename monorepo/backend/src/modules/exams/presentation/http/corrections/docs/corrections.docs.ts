@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiNotFoundResponse } from '@nestjs/swagger';
+import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiNotFoundResponse, getSchemaPath } from '@nestjs/swagger';
 import { ApiDataResponse } from '../../../../../../shared/utils/swagger';
 import { CorrectionResponseDto, ApplyCorrectionResponseDto } from '../dto/CorrectionResponseDto';
 
@@ -29,4 +29,17 @@ export const ApplyFromCsvDocs = () =>
     ApiOperation({ summary: 'Import student answers from CSV and apply correction' }),
     ApiDataResponse(ApplyCorrectionResponseDto),
     ApiNotFoundResponse({ description: 'Correction or student not found' }),
+  );
+
+export const GetCorrectionsByExamDocs = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'List all corrections for a given exam' }),
+    ApiExtraModels(CorrectionResponseDto),
+    ApiOkResponse({
+      schema: {
+        properties: {
+          data: { type: 'array', items: { $ref: getSchemaPath(CorrectionResponseDto) } },
+        },
+      },
+    }),
   );

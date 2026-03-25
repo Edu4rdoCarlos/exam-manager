@@ -48,6 +48,7 @@ import { ExportAnswerKeyCsv } from './application/keys/services/ExportAnswerKeyC
 import { SubmitStudentAnswers } from './application/student-answer/services/SubmitStudentAnswers';
 import { CreateCorrection } from './application/corrections/services/CreateCorrection';
 import { GetCorrection } from './application/corrections/services/GetCorrection';
+import { GetCorrectionsByExam } from './application/corrections/services/GetCorrectionsByExam';
 import { ApplyCorrection } from './application/corrections/services/ApplyCorrection';
 import { CorrectExamFromCsv } from './application/corrections/services/CorrectExamFromCsv';
 import { GetGrades } from './application/grade/services/GetGrades';
@@ -89,7 +90,7 @@ import { GradeController } from './presentation/http/grade/GradeController';
     CreateQuestion, GetQuestion, GetAllQuestions, UpdateQuestion, DeleteQuestion,
     CreateAnswerKeys, GetAnswerKeys, ExportAnswerKeyCsv,
     SubmitStudentAnswers,
-    CreateCorrection, GetCorrection, ApplyCorrection, CorrectExamFromCsv,
+    CreateCorrection, GetCorrection, GetCorrectionsByExam, ApplyCorrection, CorrectExamFromCsv,
     GetGrades, GetGradeReport,
   ],
   exports: [GetExamsByTeacher],

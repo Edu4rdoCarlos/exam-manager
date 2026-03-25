@@ -14,6 +14,11 @@ export class PrismaCorrectionRepository implements CorrectionRepository {
     return { ...row, correctionMode: row.correctionMode as Correction['correctionMode'] };
   }
 
+  async findByExamId(examId: string): Promise<Correction[]> {
+    const rows = await this.prisma.correction.findMany({ where: { examId } });
+    return rows.map((row) => ({ ...row, correctionMode: row.correctionMode as Correction['correctionMode'] }));
+  }
+
   async save(correction: Correction): Promise<Correction> {
     const row = await this.prisma.correction.upsert({
       where: { id: correction.id },
