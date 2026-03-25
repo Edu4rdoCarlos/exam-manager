@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/JwtAuthGuar
 import { CreateExam } from '../../application/services/CreateExam';
 import { GetExam } from '../../application/services/GetExam';
 import { CreateExamDto } from './dto/CreateExamDto';
+import { CreateExamDocs, GetExamDocs } from './docs/exams.docs';
 
 @ApiBearerAuth()
 @ApiTags('exams')
@@ -16,6 +17,7 @@ export class ExamController {
   ) {}
 
   @Post()
+  @CreateExamDocs()
   async create(@Body() dto: CreateExamDto): Promise<unknown> {
     const result = await this.createExam.execute({
       title: dto.title,
@@ -30,6 +32,7 @@ export class ExamController {
   }
 
   @Get(':id')
+  @GetExamDocs()
   async findOne(@Param('id') id: string): Promise<unknown> {
     const result = await this.getExam.execute(id);
     if (!result.ok) throw new NotFoundException(result.error);

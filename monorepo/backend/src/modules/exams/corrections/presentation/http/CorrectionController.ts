@@ -5,6 +5,7 @@ import { CreateCorrection } from '../../application/services/CreateCorrection';
 import { GetCorrection } from '../../application/services/GetCorrection';
 import { ApplyCorrection } from '../../application/services/ApplyCorrection';
 import { CreateCorrectionDto } from './dto/CreateCorrectionDto';
+import { CreateCorrectionDocs, GetCorrectionDocs, ApplyCorrectionDocs } from './docs/corrections.docs';
 
 @ApiBearerAuth()
 @ApiTags('corrections')
@@ -18,6 +19,7 @@ export class CorrectionController {
   ) {}
 
   @Post()
+  @CreateCorrectionDocs()
   async create(@Body() dto: CreateCorrectionDto): Promise<unknown> {
     const result = await this.createCorrection.execute(dto);
     if (!result.ok) throw new NotFoundException(result.error);
@@ -25,6 +27,7 @@ export class CorrectionController {
   }
 
   @Get(':id')
+  @GetCorrectionDocs()
   async findOne(@Param('id') id: string): Promise<unknown> {
     const result = await this.getCorrection.execute(id);
     if (!result.ok) throw new NotFoundException(result.error);
@@ -32,6 +35,7 @@ export class CorrectionController {
   }
 
   @Post(':id/apply')
+  @ApplyCorrectionDocs()
   async apply(@Param('id') id: string): Promise<unknown> {
     const result = await this.applyCorrection.execute({ correctionId: id });
     if (!result.ok) throw new NotFoundException(result.error);

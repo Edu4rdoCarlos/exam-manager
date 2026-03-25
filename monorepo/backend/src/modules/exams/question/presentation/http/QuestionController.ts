@@ -5,6 +5,7 @@ import { CreateQuestion } from '../../application/services/CreateQuestion';
 import { GetQuestion } from '../../application/services/GetQuestion';
 import { GetAllQuestions } from '../../application/services/GetAllQuestions';
 import { CreateQuestionDto } from './dto/CreateQuestionDto';
+import { CreateQuestionDocs, GetAllQuestionsDocs, GetQuestionDocs } from './docs/questions.docs';
 
 @ApiBearerAuth()
 @ApiTags('questions')
@@ -18,6 +19,7 @@ export class QuestionController {
   ) {}
 
   @Post()
+  @CreateQuestionDocs()
   async create(@Body() dto: CreateQuestionDto): Promise<unknown> {
     const result = await this.createQuestion.execute(dto);
     if (!result.ok) throw new Error('Unexpected failure');
@@ -25,11 +27,13 @@ export class QuestionController {
   }
 
   @Get()
+  @GetAllQuestionsDocs()
   async findAll(): Promise<unknown> {
     return this.getAllQuestions.execute();
   }
 
   @Get(':id')
+  @GetQuestionDocs()
   async findOne(@Param('id') id: string): Promise<unknown> {
     const result = await this.getQuestion.execute(id);
     if (!result.ok) throw new NotFoundException(result.error);

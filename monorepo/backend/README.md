@@ -49,8 +49,8 @@ cd monorepo/backend
 npm run start:dev
 ```
 
-API disponível em `http://localhost:3000`
-Swagger em `http://localhost:3000/docs`
+API disponível em `http://localhost:3001`
+Swagger em `http://localhost:3001/docs`
 
 ---
 

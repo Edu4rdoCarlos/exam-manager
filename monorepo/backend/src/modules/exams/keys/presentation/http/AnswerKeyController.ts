@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/JwtAuthGuar
 import { CreateAnswerKeys } from '../../application/services/CreateAnswerKeys';
 import { GetAnswerKeys } from '../../application/services/GetAnswerKeys';
 import { CreateAnswerKeysDto } from './dto/CreateAnswerKeysDto';
+import { CreateAnswerKeysDocs, GetAnswerKeysDocs } from './docs/answer-keys.docs';
 
 @ApiBearerAuth()
 @ApiTags('answer-keys')
@@ -16,6 +17,7 @@ export class AnswerKeyController {
   ) {}
 
   @Post()
+  @CreateAnswerKeysDocs()
   async create(@Body() dto: CreateAnswerKeysDto): Promise<unknown> {
     const result = await this.createAnswerKeys.execute(dto);
     if (!result.ok) throw new Error('Unexpected failure');
@@ -23,6 +25,7 @@ export class AnswerKeyController {
   }
 
   @Get('exam-version/:examVersionId')
+  @GetAnswerKeysDocs()
   async findByExamVersion(@Param('examVersionId') examVersionId: string): Promise<unknown> {
     return this.getAnswerKeys.execute(examVersionId);
   }
