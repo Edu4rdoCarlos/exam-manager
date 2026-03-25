@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: exam_manager_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-exam_manager}
+      POSTGRES_USER: ${POSTGRES_USER:-exam_manager}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-exam_manager}
+      TZ: ${TZ:-America/Recife}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB:-exam_manager} -U ${POSTGRES_USER:-exam_manager} -h 127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [exam_manager_net]
+
+volumes:
+  postgres_data:
+
+networks:
+  exam_manager_net:
+    driver: bridge

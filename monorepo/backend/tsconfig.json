@@ -10,7 +10,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "paths": {
-      "@exam-manager/database": ["../database/src/index.ts"]
+      "@exam-manager/database": ["../database/src/generated/client"]
     }
   },
   "include": ["src"],
