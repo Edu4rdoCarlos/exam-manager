@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 
-const swaggerPaths = ['/docs', '/docs-json', '/docs/'];
+const skippedPaths = ['/docs', '/docs-json', '/docs/'];
 
 export function apiKeyMiddleware(req: Request, res: Response, next: NextFunction): void {
-  if (swaggerPaths.some((p) => req.path.startsWith(p))) {
+  if (req.method === 'OPTIONS' || skippedPaths.some((p) => req.path.startsWith(p))) {
     next();
     return;
   }

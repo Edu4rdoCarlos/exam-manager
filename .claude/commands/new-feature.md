@@ -59,26 +59,32 @@ Generate in `server/src/modules/<module>/<feature>/`:
 
 ## Frontend (Next.js)
 
-Generate in `client/src/features/<feature>/`:
-
 ```
-<feature>/
-├── api/
-│   └── <feature>Api.ts         # axios calls, typed
+src/
+├── app/
+│   ├── (public)/               # unauthenticated pages (login, register)
+│   └── (dashboard)/            # authenticated pages, one folder per route
+│       └── <feature>/
+│           └── page.tsx
 ├── components/
-│   ├── <Feature>List.tsx        # shadcn/ui + TailwindCSS
-│   └── <Feature>Form.tsx        # react-hook-form + zod resolver
-├── hooks/
-│   └── use<Feature>.ts          # react-query, data fetching + mutations
-└── types/
-    └── <feature>.types.ts       # TypeScript types + zod schema
+│   ├── primitives/             # shadcn/ui base components (button, input, badge…)
+│   ├── shared/                 # reusable cross-feature (PageHeader, DataTable, EmptyState…)
+│   ├── layout/
+│   │   └── <feature>/          # page-specific components for this feature
+│   │       ├── <Feature>Table.tsx
+│   │       └── <Feature>Form.tsx
+│   └── providers/              # React context providers
+└── lib/
+    ├── api/
+    │   └── <feature>.ts        # fetch calls, typed, uses apiRequest()
+    └── types.ts                # shared TypeScript types mirroring backend DTOs
 ```
 
 ### Frontend Rules
 
-- Zod schema must mirror the backend DTO exactly
-- All HTTP calls go through `api/` — no direct fetch in components or hooks
-- react-query keys are stable string arrays
+- Component types: `primitives/` = shadcn base, `shared/` = cross-feature reusables, `layout/<feature>/` = page-specific
+- All HTTP calls go through `lib/api/` — no direct fetch in components
+- TanStack Query for all data fetching and mutations
 - No `any`
 
 ## After Generating

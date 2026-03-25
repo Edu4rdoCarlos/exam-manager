@@ -54,6 +54,17 @@ Apply **SOLID** at all times:
 - **Backend:** NestJS + TypeScript
 - **Test:** Cucumber.js for acceptance tests, Jest for unit/integration tests
 
+## Frontend Component Structure
+
+Components live in `src/components/` organized into four folders:
+
+- `primitives/` — shadcn/ui base components (button, input, badge, card, table, etc.). The `components.json` alias `"ui"` points here. Future `npx shadcn add` installs go here.
+- `shared/` — reusable cross-feature components (PageHeader, ConfirmDeleteDialog, EmptyState, StatusBadge, DataTable, etc.)
+- `layout/` — page/feature-specific components organized by feature subfolder (e.g. `layout/app/AppSidebar.tsx`, `layout/dashboard/DashboardStats.tsx`)
+- `providers/` — React context providers (AuthProvider, QueryProvider, etc.)
+
+Never use a flat `components/ui/` folder.
+
 ## Available Agents
 
 Autonomous subprocesses for analysis tasks — invoked by Claude when needed:

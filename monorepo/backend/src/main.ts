@@ -8,6 +8,8 @@ import { apiKeyMiddleware } from './shared/middleware/apiKeyMiddleware';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:3000' });
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   app.use(apiKeyMiddleware);
