@@ -4,7 +4,8 @@
       "Bash(docker compose:*)",
       "Bash(npm install:*)",
       "Bash(pkill -f \"nest start\")",
-      "Bash(curl -s http://localhost:3000/docs-json)"
+      "Bash(curl -s http://localhost:3000/docs-json)",
+      "Bash(npm run:*)"
     ]
   }
 }
