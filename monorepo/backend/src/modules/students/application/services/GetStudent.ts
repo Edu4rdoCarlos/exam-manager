@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Student } from '../../domain/Student';
 import { StudentRepository, STUDENT_REPOSITORY } from '../ports/StudentRepository';
 import { StudentNotFound } from '../../domain/errors/StudentNotFound';
-import { Result, success, failure } from '../../../../../shared/result';
+import { Result, success, failure } from '../../../../shared/result';
 
 @Injectable()
 export class GetStudent {

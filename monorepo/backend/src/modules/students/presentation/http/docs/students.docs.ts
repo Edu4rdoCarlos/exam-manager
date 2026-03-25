@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiOperation, ApiConflictResponse, ApiNotFoundResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { ApiDataResponse } from '../../../../../../shared/utils/swagger';
+import { ApiDataResponse } from '../../../../../shared/utils/swagger';
 import { StudentResponseDto } from '../dto/StudentResponseDto';
 
 export const CreateStudentDocs = () =>

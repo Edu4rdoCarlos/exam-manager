@@ -1,9 +1,9 @@
 import { Body, ConflictException, Controller, Get, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/JwtAuthGuard';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/JwtAuthGuard';
 import { CreateStudent } from '../../application/services/CreateStudent';
 import { GetStudent } from '../../application/services/GetStudent';
-import { HttpResponse, HttpResponseBody } from '../../../../../shared/utils/HttpResponse';
+import { HttpResponse, HttpResponseBody } from '../../../../shared/utils/HttpResponse';
 import { CreateStudentDto } from './dto/CreateStudentDto';
 import { CreateStudentDocs, GetStudentDocs } from './docs/students.docs';
 

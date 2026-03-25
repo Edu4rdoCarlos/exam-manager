@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../../shared/database/prisma.service';
+import { PrismaService } from '../../../../shared/database/prisma.service';
 import { Student } from '../../domain/Student';
 import { StudentRepository } from '../../application/ports/StudentRepository';
 

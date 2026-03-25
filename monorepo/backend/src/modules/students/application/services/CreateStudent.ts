@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { Student } from '../../domain/Student';
 import { CpfAlreadyInUse } from '../../domain/errors/CpfAlreadyInUse';
 import { StudentRepository, STUDENT_REPOSITORY } from '../ports/StudentRepository';
-import { Result, success, failure } from '../../../../../shared/result';
+import { Result, success, failure } from '../../../../shared/result';
 
 export interface CreateStudentInput {
   readonly name: string;
