@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { GradeReport } from '../../domain/GradeReport';
 import { GradeRepository, GRADE_REPOSITORY } from '../ports/GradeRepository';
-import { StudentRepository, STUDENT_REPOSITORY } from '../../../../students/student/application/ports/StudentRepository';
+import { StudentRepository, STUDENT_REPOSITORY } from '../../../../students/application/ports/StudentRepository';
 import { ExamVersionRepository, EXAM_VERSION_REPOSITORY } from '../../../versions/application/ports/ExamVersionRepository';
 import { ExamRepository, EXAM_REPOSITORY } from '../../../exam/application/ports/ExamRepository';
 

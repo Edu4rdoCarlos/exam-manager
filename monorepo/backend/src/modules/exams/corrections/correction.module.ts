@@ -5,7 +5,7 @@ import { ExamVersionModule } from '../versions/exam-version.module';
 import { AnswerKeyModule } from '../keys/answer-key.module';
 import { StudentAnswerModule } from '../student-answer/student-answer.module';
 import { GradeModule } from '../grade/grade.module';
-import { StudentModule } from '../../students/student/student.module';
+import { StudentModule } from '../../students/student.module';
 import { CORRECTION_REPOSITORY } from './application/ports/CorrectionRepository';
 import { PrismaCorrectionRepository } from './infrastructure/persistence/PrismaCorrectionRepository';
 import { CreateCorrection } from './application/services/CreateCorrection';

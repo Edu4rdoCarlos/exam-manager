@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { PrismaModule } from './shared/database/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/users/user.module';
-import { StudentModule } from './modules/students/student/student.module';
+import { StudentModule } from './modules/students/student.module';
 import { QuestionModule } from './modules/exams/question/question.module';
 import { ExamModule } from './modules/exams/exam/exam.module';
 import { ExamVersionModule } from './modules/exams/versions/exam-version.module';

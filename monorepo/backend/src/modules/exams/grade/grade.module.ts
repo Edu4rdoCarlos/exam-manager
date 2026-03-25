@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../../auth/auth.module';
 import { ExamModule } from '../exam/exam.module';
 import { ExamVersionModule } from '../versions/exam-version.module';
-import { StudentModule } from '../../students/student/student.module';
+import { StudentModule } from '../../students/student.module';
 import { GRADE_REPOSITORY } from './application/ports/GradeRepository';
 import { PrismaGradeRepository } from './infrastructure/persistence/PrismaGradeRepository';
 import { GetGrades } from './application/services/GetGrades';
