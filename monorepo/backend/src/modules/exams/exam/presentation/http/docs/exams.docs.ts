@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiNotFoundResponse } from '@nestjs/swagger';
+import { ApiConflictResponse, ApiNoContentResponse, ApiNotFoundResponse, ApiOperation } from '@nestjs/swagger';
 import { ApiDataResponse } from '../../../../../../shared/utils/swagger';
 import { ExamResponseDto } from '../dto/ExamResponseDto';
 
@@ -14,4 +14,19 @@ export const GetExamDocs = () =>
     ApiOperation({ summary: 'Get an exam by ID' }),
     ApiDataResponse(ExamResponseDto),
     ApiNotFoundResponse({ description: 'Exam not found' }),
+  );
+
+export const UpdateExamDocs = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Update an exam' }),
+    ApiDataResponse(ExamResponseDto),
+    ApiNotFoundResponse({ description: 'Exam not found' }),
+  );
+
+export const DeleteExamDocs = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Delete an exam' }),
+    ApiNoContentResponse({ description: 'Exam deleted' }),
+    ApiNotFoundResponse({ description: 'Exam not found' }),
+    ApiConflictResponse({ description: 'Exam has existing versions and cannot be deleted' }),
   );

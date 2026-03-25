@@ -23,3 +23,10 @@ export const ApplyCorrectionDocs = () =>
     ApiDataResponse(ApplyCorrectionResponseDto),
     ApiNotFoundResponse({ description: 'Correction not found' }),
   );
+
+export const ApplyFromCsvDocs = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Import student answers from CSV and apply correction' }),
+    ApiDataResponse(ApplyCorrectionResponseDto),
+    ApiNotFoundResponse({ description: 'Correction or student not found' }),
+  );

@@ -24,11 +24,22 @@ export interface ExamWithDetails extends Exam {
   readonly examQuestions: ExamQuestionData[];
 }
 
+export interface UpdateExamData {
+  readonly title?: string;
+  readonly subject?: string;
+  readonly examDate?: Date | null;
+  readonly answerFormat?: Exam['answerFormat'];
+  readonly questionIds?: Array<{ readonly questionId: string; readonly position: number }>;
+}
+
 export interface ExamRepository {
   findById(id: string): Promise<Exam | null>;
   findByIdWithDetails(id: string): Promise<ExamWithDetails | null>;
   findAll(): Promise<Exam[]>;
   save(data: CreateExamData): Promise<Exam>;
+  update(id: string, data: UpdateExamData): Promise<Exam | null>;
+  delete(id: string): Promise<void>;
+  hasVersions(id: string): Promise<boolean>;
 }
 
 export const EXAM_REPOSITORY = Symbol('ExamRepository');

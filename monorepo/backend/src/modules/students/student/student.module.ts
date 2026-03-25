@@ -14,6 +14,6 @@ import { StudentController } from './presentation/http/StudentController';
     CreateStudent,
     GetStudent,
   ],
-  exports: [GetStudent],
+  exports: [GetStudent, STUDENT_REPOSITORY],
 })
 export class StudentModule {}

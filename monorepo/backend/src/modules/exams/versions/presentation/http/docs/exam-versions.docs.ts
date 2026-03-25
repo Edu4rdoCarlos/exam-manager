@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiNotFoundResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ApiDataResponse, ApiPaginatedResponse } from '../../../../../../shared/utils/swagger';
 import { ExamVersionResponseDto } from '../dto/ExamVersionResponseDto';
 
@@ -21,5 +21,12 @@ export const GetExamVersionDocs = () =>
   applyDecorators(
     ApiOperation({ summary: 'Get an exam version by ID' }),
     ApiDataResponse(ExamVersionResponseDto),
+    ApiNotFoundResponse({ description: 'Exam version not found' }),
+  );
+
+export const ExportExamVersionPdfDocs = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Export an exam version as PDF' }),
+    ApiOkResponse({ description: 'PDF file', content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } } }),
     ApiNotFoundResponse({ description: 'Exam version not found' }),
   );

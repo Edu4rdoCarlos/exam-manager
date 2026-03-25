@@ -1,12 +1,15 @@
-import { Body, Controller, Get, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, HttpCode, NotFoundException, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/JwtAuthGuard';
 import { CreateQuestion } from '../../application/services/CreateQuestion';
 import { GetQuestion } from '../../application/services/GetQuestion';
 import { GetAllQuestions } from '../../application/services/GetAllQuestions';
+import { UpdateQuestion } from '../../application/services/UpdateQuestion';
+import { DeleteQuestion } from '../../application/services/DeleteQuestion';
 import { HttpResponse, HttpResponseBody, HttpPaginatedResponseBody } from '../../../../../shared/utils/HttpResponse';
 import { CreateQuestionDto } from './dto/CreateQuestionDto';
-import { CreateQuestionDocs, GetAllQuestionsDocs, GetQuestionDocs } from './docs/questions.docs';
+import { UpdateQuestionDto } from './dto/UpdateQuestionDto';
+import { CreateQuestionDocs, GetAllQuestionsDocs, GetQuestionDocs, UpdateQuestionDocs, DeleteQuestionDocs } from './docs/questions.docs';
 
 @ApiBearerAuth()
 @ApiTags('questions')
@@ -17,6 +20,8 @@ export class QuestionController {
     private readonly createQuestion: CreateQuestion,
     private readonly getQuestion: GetQuestion,
     private readonly getAllQuestions: GetAllQuestions,
+    private readonly updateQuestion: UpdateQuestion,
+    private readonly deleteQuestion: DeleteQuestion,
   ) {}
 
   @Post()
@@ -45,5 +50,24 @@ export class QuestionController {
     const result = await this.getQuestion.execute(id);
     if (!result.ok) throw new NotFoundException(result.error);
     return HttpResponse.of(result.value);
+  }
+
+  @Patch(':id')
+  @UpdateQuestionDocs()
+  async update(@Param('id') id: string, @Body() dto: UpdateQuestionDto): Promise<HttpResponseBody<unknown>> {
+    const result = await this.updateQuestion.execute(id, dto);
+    if (!result.ok) throw new NotFoundException(result.error);
+    return HttpResponse.of(result.value);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @DeleteQuestionDocs()
+  async remove(@Param('id') id: string): Promise<void> {
+    const result = await this.deleteQuestion.execute(id);
+    if (!result.ok) {
+      if (result.error.type === 'QuestionNotFound') throw new NotFoundException(result.error);
+      throw new ConflictException(result.error);
+    }
   }
 }

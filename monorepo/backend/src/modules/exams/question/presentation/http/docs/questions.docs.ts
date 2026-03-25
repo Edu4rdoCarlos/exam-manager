@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiNotFoundResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiNotFoundResponse, ApiConflictResponse, ApiNoContentResponse } from '@nestjs/swagger';
 import { ApiDataResponse, ApiPaginatedResponse } from '../../../../../../shared/utils/swagger';
 import { QuestionResponseDto } from '../dto/QuestionResponseDto';
 
@@ -20,4 +20,19 @@ export const GetQuestionDocs = () =>
     ApiOperation({ summary: 'Get a question by ID' }),
     ApiDataResponse(QuestionResponseDto),
     ApiNotFoundResponse({ description: 'Question not found' }),
+  );
+
+export const UpdateQuestionDocs = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Update a question statement and/or alternatives' }),
+    ApiDataResponse(QuestionResponseDto),
+    ApiNotFoundResponse({ description: 'Question not found' }),
+  );
+
+export const DeleteQuestionDocs = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Delete a question' }),
+    ApiNoContentResponse({ description: 'Question deleted' }),
+    ApiNotFoundResponse({ description: 'Question not found' }),
+    ApiConflictResponse({ description: 'Question is already used in an exam' }),
   );

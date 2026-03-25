@@ -37,6 +37,8 @@
 | RF-QST-02 | Cada alternativa deve indicar se é a correta (`isCorrect`). |
 | RF-QST-03 | O sistema deve permitir a consulta de uma questão pelo seu ID, retornando enunciado e alternativas. |
 | RF-QST-04 | O sistema deve permitir a listagem de todas as questões cadastradas. |
+| RF-QST-05 | O sistema deve permitir a alteração do enunciado e/ou das alternativas de uma questão existente. |
+| RF-QST-06 | O sistema deve permitir a remoção de uma questão, desde que ela não esteja associada a nenhuma prova. |
 
 ---
 
@@ -47,6 +49,8 @@
 | RF-EXM-01 | O sistema deve permitir que um professor crie uma prova com título, disciplina, data e formato de resposta (`letters` ou `powers_of_two`). |
 | RF-EXM-02 | O sistema deve permitir a associação de questões a uma prova, cada uma com uma posição ordinal. |
 | RF-EXM-03 | O sistema deve permitir a consulta de uma prova pelo seu ID. |
+| RF-EXM-04 | O sistema deve permitir a alteração dos dados de uma prova (título, disciplina, data, formato de resposta e questões associadas). |
+| RF-EXM-05 | O sistema deve permitir a remoção de uma prova, desde que ela não possua versões geradas. |
 
 ---
 
@@ -58,6 +62,7 @@
 | RF-VER-02 | Cada alternativa em uma versão recebe um rótulo (`label`) que pode ser uma letra (`A`, `B`, `C`…) ou uma potência de dois (`1`, `2`, `4`…), conforme o formato de resposta da prova. |
 | RF-VER-03 | O sistema deve permitir a consulta de uma versão pelo seu ID, retornando questões e alternativas na ordem da versão. |
 | RF-VER-04 | O sistema deve permitir a listagem de todas as versões de uma prova. |
+| RF-VER-05 | O sistema deve permitir a exportação de uma versão de prova como PDF, contendo cabeçalho (título, disciplina, data), questões com alternativas rotuladas, espaço para resposta em cada questão, rodapé com o número da versão e campo para nome e CPF do aluno ao final. |
 
 ---
 
@@ -67,6 +72,7 @@
 |---|---|
 | RF-GAB-01 | O sistema deve permitir o cadastro do gabarito de uma versão, associando cada questão da versão à resposta correta esperada. |
 | RF-GAB-02 | O sistema deve permitir a consulta do gabarito de uma versão pelo ID da versão. |
+| RF-GAB-03 | O sistema deve permitir a exportação do gabarito de uma versão como CSV. Cada linha contém o número da versão seguido das respostas corretas na ordem das questões da versão. |
 
 ---
 
@@ -87,6 +93,7 @@
 | RF-COR-02 | No modo `strict`, a resposta do aluno deve ser exatamente igual ao gabarito para ser considerada correta. |
 | RF-COR-03 | No modo `lenient`, respostas parcialmente corretas (subconjunto válido das alternativas marcadas) são aceitas. |
 | RF-COR-04 | O sistema deve calcular e persistir a nota de cada aluno ao aplicar uma correção. |
+| RF-COR-05 | O sistema deve permitir a correção via upload de CSV com as respostas dos alunos. O CSV deve conter, por linha: `studentId`, `examVersionId`, `questionId`, `answer`. O sistema persiste as respostas e aplica a correção automaticamente. |
 
 ---
 
@@ -96,6 +103,7 @@
 |---|---|
 | RF-NOT-01 | O sistema deve permitir a consulta das notas de todos os alunos de uma versão de prova. |
 | RF-NOT-02 | O sistema deve associar cada nota a uma correção específica, permitindo que a mesma prova tenha correções em modos diferentes. |
+| RF-NOT-03 | O sistema deve permitir a consulta de um relatório de notas enriquecido por correção, contendo nome do aluno, CPF, número da versão da prova e nota. |
 
 ---
 
