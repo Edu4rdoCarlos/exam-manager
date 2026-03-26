@@ -33,9 +33,9 @@ export class ExamVersionController {
   async findByExam(@Query('examId') examId: string): Promise<HttpPaginatedResponseBody<unknown>> {
     const items = (await this.getExamVersion.findByExamId(examId)) as unknown[];
     return HttpResponse.paginated(items, {
-      total: items.length,
       page: 1,
-      limit: items.length,
+      perPage: items.length,
+      totalItems: items.length,
       totalPages: 1,
     });
   }

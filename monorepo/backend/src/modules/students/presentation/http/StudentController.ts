@@ -1,9 +1,10 @@
-import { Body, ConflictException, Controller, Get, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Get, NotFoundException, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/JwtAuthGuard';
 import { CreateStudent } from '../../application/services/CreateStudent';
 import { GetStudent } from '../../application/services/GetStudent';
-import { HttpResponse, HttpResponseBody } from '../../../../shared/utils/HttpResponse';
+import { ListStudents } from '../../application/services/ListStudents';
+import { HttpResponse, HttpPaginatedResponseBody, HttpResponseBody } from '../../../../shared/utils/HttpResponse';
 import { CreateStudentDto } from './dto/CreateStudentDto';
 import { CreateStudentDocs, GetStudentDocs } from './docs/students.docs';
 
@@ -15,7 +16,17 @@ export class StudentController {
   constructor(
     private readonly createStudent: CreateStudent,
     private readonly getStudent: GetStudent,
+    private readonly listStudents: ListStudents,
   ) {}
+
+  @Get()
+  async findAll(
+    @Query('page') page = '1',
+    @Query('perPage') perPage = '20',
+  ): Promise<HttpPaginatedResponseBody<unknown>> {
+    const { students, totalItems, totalPages } = await this.listStudents.execute(Number(page), Number(perPage));
+    return HttpResponse.paginated(students, { page: Number(page), perPage: Number(perPage), totalItems, totalPages });
+  }
 
   @Post()
   @CreateStudentDocs()

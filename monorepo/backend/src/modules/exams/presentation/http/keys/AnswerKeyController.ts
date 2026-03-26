@@ -27,9 +27,9 @@ export class AnswerKeyController {
     if (!result.ok) throw new Error('Unexpected failure');
     const items = result.value as unknown[];
     return HttpResponse.paginated(items, {
-      total: items.length,
       page: 1,
-      limit: items.length,
+      perPage: items.length,
+      totalItems: items.length,
       totalPages: 1,
     });
   }
@@ -39,9 +39,9 @@ export class AnswerKeyController {
   async findByExamVersion(@Param('examVersionId') examVersionId: string): Promise<HttpPaginatedResponseBody<unknown>> {
     const items = (await this.getAnswerKeys.execute(examVersionId)) as unknown[];
     return HttpResponse.paginated(items, {
-      total: items.length,
       page: 1,
-      limit: items.length,
+      perPage: items.length,
+      totalItems: items.length,
       totalPages: 1,
     });
   }

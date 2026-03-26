@@ -20,9 +20,9 @@ export class StudentAnswerController {
     if (!result.ok) throw new Error('Unexpected failure');
     const items = result.value as unknown[];
     return HttpResponse.paginated(items, {
-      total: items.length,
       page: 1,
-      limit: items.length,
+      perPage: items.length,
+      totalItems: items.length,
       totalPages: 1,
     });
   }

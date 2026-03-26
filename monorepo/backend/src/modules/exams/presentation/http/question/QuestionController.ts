@@ -37,9 +37,9 @@ export class QuestionController {
   async findAll(): Promise<HttpPaginatedResponseBody<unknown>> {
     const items = (await this.getAllQuestions.execute()) as unknown[];
     return HttpResponse.paginated(items, {
-      total: items.length,
       page: 1,
-      limit: items.length,
+      perPage: items.length,
+      totalItems: items.length,
       totalPages: 1,
     });
   }

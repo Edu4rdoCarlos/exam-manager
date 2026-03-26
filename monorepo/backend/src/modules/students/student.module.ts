@@ -4,6 +4,7 @@ import { STUDENT_REPOSITORY } from './application/ports/StudentRepository';
 import { PrismaStudentRepository } from './infrastructure/persistence/PrismaStudentRepository';
 import { CreateStudent } from './application/services/CreateStudent';
 import { GetStudent } from './application/services/GetStudent';
+import { ListStudents } from './application/services/ListStudents';
 import { StudentController } from './presentation/http/StudentController';
 
 @Module({
@@ -13,6 +14,7 @@ import { StudentController } from './presentation/http/StudentController';
     { provide: STUDENT_REPOSITORY, useClass: PrismaStudentRepository },
     CreateStudent,
     GetStudent,
+    ListStudents,
   ],
   exports: [GetStudent, STUDENT_REPOSITORY],
 })

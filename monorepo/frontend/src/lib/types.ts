@@ -97,9 +97,9 @@ export interface GradeReport {
 }
 
 export interface PaginationMetadata {
-  total: number;
   page: number;
-  limit: number;
+  perPage: number;
+  totalItems: number;
   totalPages: number;
 }
 

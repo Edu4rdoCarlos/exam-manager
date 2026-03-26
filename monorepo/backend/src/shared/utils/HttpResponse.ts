@@ -1,7 +1,7 @@
 export interface PaginationMetadata {
-  readonly total: number;
   readonly page: number;
-  readonly limit: number;
+  readonly perPage: number;
+  readonly totalItems: number;
   readonly totalPages: number;
 }
 
