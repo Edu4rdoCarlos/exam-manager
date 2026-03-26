@@ -22,5 +22,5 @@ src/components/
 ## Variáveis de ambiente
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3001](https://exam-manager.up.railway.app/)
+NEXT_PUBLIC_API_URL=http://localhost:3001](https://exam-manager.up.railway.app/
 ```
