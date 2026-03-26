@@ -5,6 +5,7 @@ import { jwtDecode } from "jwt-decode";
 
 interface JwtPayload {
   sub: string;
+  name: string;
   email: string;
   exp: number;
 }

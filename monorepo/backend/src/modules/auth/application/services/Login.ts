@@ -25,7 +25,7 @@ export class Login {
     const hash = createHash('sha256').update(input.password).digest('hex');
     if (hash !== user.passwordHash) return failure(new InvalidCredentials());
 
-    const accessToken = this.tokenService.sign({ sub: user.id, email: user.email });
+    const accessToken = this.tokenService.sign({ sub: user.id, name: user.name, email: user.email });
     return success({ accessToken });
   }
 }

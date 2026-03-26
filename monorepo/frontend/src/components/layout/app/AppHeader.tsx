@@ -29,16 +29,14 @@ export function AppHeader() {
     <header className="sticky top-0 z-50 border-b border-border/50 bg-white/80 backdrop-blur-lg dark:bg-slate-900/80 shadow-sm">
       <div className="flex h-16 items-center justify-end gap-4 px-6">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 cursor-pointer rounded-xl p-2 hover:bg-muted/50 transition-colors outline-none">
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-semibold text-foreground">{user?.name}</p>
-                <p className="text-xs font-medium text-primary">Professor</p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30">
-                <User className="h-5 w-5 text-primary-foreground" />
-              </div>
-            </button>
+          <DropdownMenuTrigger className="flex items-center gap-3 cursor-pointer rounded-xl p-2 hover:bg-muted/50 transition-colors outline-none">
+            <div className="hidden sm:block text-right">
+              <p className="text-sm font-semibold text-foreground">{user?.name}</p>
+              <p className="text-xs font-medium text-primary">Professor</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30">
+              <User className="h-5 w-5 text-primary-foreground" />
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuGroup>

@@ -1,5 +1,6 @@
 export interface TokenPayload {
   readonly sub: string;
+  readonly name: string;
   readonly email: string;
 }
 

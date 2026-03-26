@@ -13,7 +13,7 @@ import {
   getGradeReport,
   getCorrectionsByExam,
 } from "@/lib/api/corrections";
-import { getAnswerKeysByVersion, createAnswerKeys, getAnswerKeyCsvUrl } from "@/lib/api/keys";
+import { getAnswerKeysByVersion, createAnswerKeys } from "@/lib/api/keys";
 import { downloadApiFile } from "@/lib/api/client";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/primitives/button";
@@ -46,12 +46,17 @@ import {
 } from "@/components/primitives/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/primitives/skeleton";
-import { ArrowLeft, Plus, FileDown, Key, Check } from "lucide-react";
-import type { Correction, ExamVersion } from "@/lib/types";
+import { ArrowLeft, Plus, FileDown, Key, Check, Upload } from "lucide-react";
+import type { Correction, ExamVersion, AnswerFormat } from "@/lib/types";
 
 const FORMAT_LABELS: Record<string, string> = {
   letters: "Letras (A, B, C...)",
   powers_of_two: "Potências de 2",
+};
+
+const CORRECTION_MODE_LABELS: Record<string, string> = {
+  strict: "Estrita",
+  lenient: "Leniente",
 };
 
 function formatDate(value: string | null): string {
@@ -61,13 +66,14 @@ function formatDate(value: string | null): string {
 
 interface GabaritoDialogProps {
   version: ExamVersion;
+  answerFormat: AnswerFormat;
   open: boolean;
   onClose: () => void;
 }
 
-function GabaritoDialog({ version, open, onClose }: GabaritoDialogProps) {
+function GabaritoDialog({ version, answerFormat, open, onClose }: GabaritoDialogProps) {
   const queryClient = useQueryClient();
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [selectedLabels, setSelectedLabels] = useState<Record<string, string[]>>({});
 
   const { data: keys, isPending: keysPending } = useQuery({
     queryKey: ["answer-keys", version.id],
@@ -95,13 +101,37 @@ function GabaritoDialog({ version, open, onClose }: GabaritoDialogProps) {
     }
   }
 
+  function toggleLabel(questionId: string, label: string) {
+    setSelectedLabels((prev) => {
+      const current = prev[questionId] ?? [];
+      const updated = current.includes(label)
+        ? current.filter((l) => l !== label)
+        : [...current, label];
+      return { ...prev, [questionId]: updated };
+    });
+  }
+
+  function buildCorrectAnswer(questionId: string): string {
+    const labels = (selectedLabels[questionId] ?? []).sort();
+    if (answerFormat === "powers_of_two") {
+      const sum = labels.reduce((acc, l) => acc + (parseInt(l, 10) || 0), 0);
+      return String(sum);
+    }
+    return labels.join(",");
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const allAnswered = questions.every((q) => (selectedLabels[q.id] ?? []).length > 0);
+    if (!allAnswered) {
+      toast.error("Selecione pelo menos uma alternativa correta por questão");
+      return;
+    }
     createKeysMutation.mutate({
       examVersionId: version.id,
       keys: questions.map((q) => ({
         examVersionQuestionId: q.id,
-        correctAnswer: answers[q.id] ?? "",
+        correctAnswer: buildCorrectAnswer(q.id),
       })),
     });
   }
@@ -129,44 +159,44 @@ function GabaritoDialog({ version, open, onClose }: GabaritoDialogProps) {
             ))}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <p className="text-sm text-muted-foreground">
-              Defina a resposta correta para cada questão desta versão.
+              Marque as alternativas corretas de cada questão nesta versão.
             </p>
-            {questions.map((q) => (
-              <div key={q.id} className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground w-24 shrink-0">
-                  Questão {q.position}
-                </span>
-                {q.examVersionAlternatives.length > 0 ? (
-                  <Select
-                    value={answers[q.id] ?? ""}
-                    onValueChange={(v) => setAnswers((prev) => ({ ...prev, [q.id]: v }))}
-                  >
-                    <SelectTrigger className="flex-1 w-full">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[...q.examVersionAlternatives]
-                        .sort((a, b) => a.position - b.position)
-                        .map((alt) => (
-                          <SelectItem key={alt.id} value={alt.label}>
-                            {alt.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    required
-                    placeholder="Ex: A"
-                    value={answers[q.id] ?? ""}
-                    onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                    className="flex-1"
-                  />
-                )}
-              </div>
-            ))}
+            {questions.map((q) => {
+              const alts = [...q.examVersionAlternatives].sort((a, b) => a.position - b.position);
+              const selected = selectedLabels[q.id] ?? [];
+              return (
+                <div key={q.id} className="space-y-2">
+                  <p className="text-sm font-medium">Questão {q.position}</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {alts.map((alt) => {
+                      const checked = selected.includes(alt.label);
+                      return (
+                        <button
+                          key={alt.id}
+                          type="button"
+                          onClick={() => toggleLabel(q.id, alt.label)}
+                          className={`flex items-center justify-center rounded-lg border py-2 text-sm font-medium transition-colors ${
+                            checked
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border hover:border-primary/50 hover:bg-primary/5"
+                          }`}
+                        >
+                          {alt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selected.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Resposta:{" "}
+                      <span className="font-medium text-foreground">{buildCorrectAnswer(q.id)}</span>
+                    </p>
+                  )}
+                </div>
+              );
+            })}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
@@ -189,7 +219,7 @@ export default function ExamDetailPage() {
   const csvInputRef = useRef<HTMLInputElement>(null);
 
   const [createVersionOpen, setCreateVersionOpen] = useState(false);
-  const [newVersionNumber, setNewVersionNumber] = useState("");
+  const [versionCount, setVersionCount] = useState("1");
   const [gabaritoVersion, setGabaritoVersion] = useState<ExamVersion | null>(null);
   const [createCorrectionOpen, setCreateCorrectionOpen] = useState(false);
   const [correctionMode, setCorrectionMode] = useState<"strict" | "lenient">("strict");
@@ -206,7 +236,7 @@ export default function ExamDetailPage() {
     queryFn: () => getVersionsByExam(id),
   });
 
-  const { data: correctionsRes, isPending: correctionsPending } = useQuery({
+  const { data: correctionsRes } = useQuery({
     queryKey: ["corrections", id],
     queryFn: () => getCorrectionsByExam(id),
   });
@@ -219,12 +249,7 @@ export default function ExamDetailPage() {
 
   const createVersionMutation = useMutation({
     mutationFn: createVersion,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["versions", id] });
-      toast.success("Versão criada");
-      setCreateVersionOpen(false);
-      setNewVersionNumber("");
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["versions", id] }),
     onError: (err: Error) => toast.error(err.message),
   });
 
@@ -241,6 +266,7 @@ export default function ExamDetailPage() {
   const applyCorrectionMutation = useMutation({
     mutationFn: applyCorrection,
     onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["grade-report", selectedCorrectionId] });
       toast.success(`Correção aplicada — ${result.gradesCount} notas geradas`);
     },
     onError: (err: Error) => toast.error(err.message),
@@ -250,6 +276,7 @@ export default function ExamDetailPage() {
     mutationFn: ({ correctionId, file }: { correctionId: string; file: File }) =>
       applyCorrectionFromCsv(correctionId, file),
     onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["grade-report"] });
       toast.success(`CSV aplicado — ${result.gradesCount} notas geradas`);
       setCsvCorrectionId(null);
     },
@@ -258,6 +285,23 @@ export default function ExamDetailPage() {
 
   const versions = versionsRes?.data ?? [];
   const corrections: Correction[] = correctionsRes ?? [];
+
+  async function handleCreateVersions(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const count = parseInt(versionCount, 10);
+    if (isNaN(count) || count < 1) return;
+    const startNumber = versions.length + 1;
+    try {
+      for (let i = 0; i < count; i++) {
+        await createVersionMutation.mutateAsync({ examId: id, versionNumber: startNumber + i });
+      }
+      toast.success(`${count} versão${count > 1 ? "s" : ""} gerada${count > 1 ? "s" : ""}`);
+      setCreateVersionOpen(false);
+      setVersionCount("1");
+    } catch {
+      // errors already handled per mutation
+    }
+  }
 
   if (examPending) {
     return (
@@ -270,7 +314,7 @@ export default function ExamDetailPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title={exam?.title ?? "Prova"}
         description={[exam?.subject, exam?.examDate ? formatDate(exam.examDate) : null]
@@ -290,25 +334,29 @@ export default function ExamDetailPage() {
       />
 
       {exam && (
-        <div className="flex gap-2 mb-6">
-          <Badge variant="outline">{FORMAT_LABELS[exam.answerFormat] ?? exam.answerFormat}</Badge>
-        </div>
+        <Badge variant="outline">{FORMAT_LABELS[exam.answerFormat] ?? exam.answerFormat}</Badge>
       )}
 
       <Tabs defaultValue="versions">
-        <TabsList className="mb-6">
-          <TabsTrigger value="versions">Versões</TabsTrigger>
-          <TabsTrigger value="corrections">Correções</TabsTrigger>
+        <TabsList className="mb-4">
+          <TabsTrigger value="versions">Versões ({versions.length})</TabsTrigger>
+          <TabsTrigger value="corrections">Correções ({corrections.length})</TabsTrigger>
           <TabsTrigger value="grades">Notas</TabsTrigger>
         </TabsList>
 
+        {/* VERSÕES */}
         <TabsContent value="versions">
-          <Card>
+          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-border/50 shadow-md">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Versões da Prova</CardTitle>
+              <div>
+                <CardTitle>Versões da Prova</CardTitle>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Cada versão embaralha a ordem das questões e alternativas
+                </p>
+              </div>
               <Button size="sm" onClick={() => setCreateVersionOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Nova Versão
+                Gerar Versões
               </Button>
             </CardHeader>
             <CardContent className="p-0">
@@ -319,12 +367,12 @@ export default function ExamDetailPage() {
                 </div>
               ) : versions.length === 0 ? (
                 <EmptyState
-                  message="Nenhuma versão criada"
-                  description="Crie versões para embaralhar as alternativas da prova"
+                  message="Nenhuma versão gerada"
+                  description="Gere versões para embaralhar questões e alternativas em cada prova individual"
                   action={
                     <Button onClick={() => setCreateVersionOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Nova Versão
+                      Gerar Versões
                     </Button>
                   }
                 />
@@ -333,6 +381,7 @@ export default function ExamDetailPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Versão</TableHead>
+                      <TableHead>Questões</TableHead>
                       <TableHead>Criada em</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
@@ -341,6 +390,9 @@ export default function ExamDetailPage() {
                     {versions.map((v) => (
                       <TableRow key={v.id}>
                         <TableCell className="font-medium">Versão {v.versionNumber}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {v.examVersionQuestions.length} questões
+                        </TableCell>
                         <TableCell>{formatDate(v.createdAt)}</TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-2">
@@ -360,10 +412,23 @@ export default function ExamDetailPage() {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() =>
+                                downloadApiFile(
+                                  `/answer-keys/exam-version/${v.id}/csv`,
+                                  `gabarito-versao-${v.versionNumber}.csv`
+                                ).catch(() => toast.error("Defina o gabarito antes de baixar"))
+                              }
+                            >
+                              <FileDown className="h-4 w-4 mr-1" />
+                              Gabarito CSV
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => setGabaritoVersion(v)}
                             >
                               <Key className="h-4 w-4 mr-1" />
-                              Gabarito
+                              Definir Gabarito
                             </Button>
                           </div>
                         </TableCell>
@@ -376,10 +441,16 @@ export default function ExamDetailPage() {
           </Card>
         </TabsContent>
 
+        {/* CORREÇÕES */}
         <TabsContent value="corrections">
-          <Card>
+          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-border/50 shadow-md">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Correções</CardTitle>
+              <div>
+                <CardTitle>Correções</CardTitle>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Faça upload do CSV de respostas dos alunos para corrigir a prova
+                </p>
+              </div>
               <Button size="sm" onClick={() => setCreateCorrectionOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Correção
@@ -389,7 +460,7 @@ export default function ExamDetailPage() {
               {corrections.length === 0 ? (
                 <EmptyState
                   message="Nenhuma correção criada"
-                  description="Crie uma correção para calcular as notas dos alunos"
+                  description="Crie uma correção e faça upload do CSV de respostas dos alunos"
                   action={
                     <Button onClick={() => setCreateCorrectionOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
@@ -411,7 +482,7 @@ export default function ExamDetailPage() {
                       <TableRow key={c.id}>
                         <TableCell>
                           <Badge variant={c.correctionMode === "strict" ? "default" : "secondary"}>
-                            {c.correctionMode === "strict" ? "Estrita" : "Leniente"}
+                            {CORRECTION_MODE_LABELS[c.correctionMode] ?? c.correctionMode}
                           </Badge>
                         </TableCell>
                         <TableCell>{formatDate(c.createdAt)}</TableCell>
@@ -420,22 +491,22 @@ export default function ExamDetailPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              disabled={applyCorrectionMutation.isPending}
-                              onClick={() => applyCorrectionMutation.mutate(c.id)}
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Aplicar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
                               onClick={() => {
                                 setCsvCorrectionId(c.id);
                                 csvInputRef.current?.click();
                               }}
                             >
-                              <FileDown className="h-4 w-4 mr-1" />
-                              Via CSV
+                              <Upload className="h-4 w-4 mr-1" />
+                              Upload CSV Respostas
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={applyCorrectionMutation.isPending}
+                              onClick={() => applyCorrectionMutation.mutate(c.id)}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Aplicar
                             </Button>
                           </div>
                         </TableCell>
@@ -461,10 +532,11 @@ export default function ExamDetailPage() {
           />
         </TabsContent>
 
+        {/* NOTAS */}
         <TabsContent value="grades">
-          <Card>
+          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-border/50 shadow-md">
             <CardHeader>
-              <CardTitle>Notas</CardTitle>
+              <CardTitle>Relatório de Notas</CardTitle>
             </CardHeader>
             <CardContent>
               {corrections.length === 0 ? (
@@ -475,7 +547,7 @@ export default function ExamDetailPage() {
               ) : (
                 <div className="space-y-6">
                   <div className="flex flex-col gap-1.5 max-w-xs">
-                    <Label>Correção</Label>
+                    <Label>Selecionar correção</Label>
                     <Select
                       value={selectedCorrectionId ?? ""}
                       onValueChange={setSelectedCorrectionId}
@@ -486,8 +558,7 @@ export default function ExamDetailPage() {
                       <SelectContent>
                         {corrections.map((c, i) => (
                           <SelectItem key={c.id} value={c.id}>
-                            Correção {i + 1} —{" "}
-                            {c.correctionMode === "strict" ? "Estrita" : "Leniente"}
+                            Correção {i + 1} — {CORRECTION_MODE_LABELS[c.correctionMode]}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -500,7 +571,7 @@ export default function ExamDetailPage() {
                     ) : !gradeReport || gradeReport.length === 0 ? (
                       <EmptyState
                         message="Nenhuma nota gerada ainda"
-                        description="Aplique a correção na aba Correções para gerar as notas"
+                        description='Faça upload do CSV de respostas e clique em "Aplicar" na aba Correções'
                       />
                     ) : (
                       <Table>
@@ -509,18 +580,16 @@ export default function ExamDetailPage() {
                             <TableHead>Aluno</TableHead>
                             <TableHead>CPF</TableHead>
                             <TableHead>Versão</TableHead>
-                            <TableHead>Nota</TableHead>
+                            <TableHead className="text-right">Nota</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {gradeReport.map((g) => (
                             <TableRow key={g.gradeId}>
-                              <TableCell>{g.student.name}</TableCell>
-                              <TableCell className="text-muted-foreground">
-                                {g.student.cpf}
-                              </TableCell>
+                              <TableCell className="font-medium">{g.student.name}</TableCell>
+                              <TableCell className="text-muted-foreground">{g.student.cpf}</TableCell>
                               <TableCell>Versão {g.examVersion.versionNumber}</TableCell>
-                              <TableCell className="font-medium">{g.score}</TableCell>
+                              <TableCell className="text-right font-bold">{g.score}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -533,49 +602,44 @@ export default function ExamDetailPage() {
         </TabsContent>
       </Tabs>
 
+      {/* Dialog: gerar N versões */}
       <Dialog open={createVersionOpen} onOpenChange={setCreateVersionOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nova Versão</DialogTitle>
+            <DialogTitle>Gerar Versões da Prova</DialogTitle>
           </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              createVersionMutation.mutate({
-                examId: id,
-                versionNumber: parseInt(newVersionNumber, 10),
-              });
-            }}
-            className="space-y-4"
-          >
+          <form onSubmit={handleCreateVersions} className="space-y-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="versionNumber">Número da versão</Label>
+              <Label htmlFor="versionCount">Quantas versões deseja gerar?</Label>
               <Input
-                id="versionNumber"
+                id="versionCount"
                 type="number"
                 min="1"
+                max="50"
                 required
-                value={newVersionNumber}
-                onChange={(e) => setNewVersionNumber(e.target.value)}
-                placeholder="Ex: 1"
+                value={versionCount}
+                onChange={(e) => setVersionCount(e.target.value)}
+                placeholder="Ex: 5"
               />
+              {versions.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Já existem {versions.length} versão(ões). As novas serão numeradas a partir da {versions.length + 1}.
+                </p>
+              )}
             </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCreateVersionOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setCreateVersionOpen(false)}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={createVersionMutation.isPending}>
-                {createVersionMutation.isPending ? "Criando..." : "Criar"}
+                {createVersionMutation.isPending ? "Gerando..." : "Gerar"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
+      {/* Dialog: nova correção */}
       <Dialog open={createCorrectionOpen} onOpenChange={setCreateCorrectionOpen}>
         <DialogContent>
           <DialogHeader>
@@ -592,8 +656,12 @@ export default function ExamDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="strict">Estrita — resposta exata</SelectItem>
-                  <SelectItem value="lenient">Leniente — aceita variações</SelectItem>
+                  <SelectItem value="strict">
+                    Estrita — alternativa errada zera a questão
+                  </SelectItem>
+                  <SelectItem value="lenient">
+                    Leniente — nota proporcional ao percentual de acertos
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -603,9 +671,7 @@ export default function ExamDetailPage() {
               </Button>
               <Button
                 disabled={createCorrectionMutation.isPending}
-                onClick={() =>
-                  createCorrectionMutation.mutate({ examId: id, correctionMode })
-                }
+                onClick={() => createCorrectionMutation.mutate({ examId: id, correctionMode })}
               >
                 {createCorrectionMutation.isPending ? "Criando..." : "Criar"}
               </Button>
@@ -614,9 +680,11 @@ export default function ExamDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {gabaritoVersion && (
+      {/* Dialog: gabarito */}
+      {gabaritoVersion && exam && (
         <GabaritoDialog
           version={gabaritoVersion}
+          answerFormat={exam.answerFormat}
           open={!!gabaritoVersion}
           onClose={() => setGabaritoVersion(null)}
         />

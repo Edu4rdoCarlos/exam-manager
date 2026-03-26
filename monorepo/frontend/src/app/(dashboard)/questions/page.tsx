@@ -33,14 +33,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/primitives/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Badge } from "@/components/primitives/badge";
+import { Plus, Pencil, Trash2, CheckSquare } from "lucide-react";
 import type { Question } from "@/lib/types";
 
 type AlternativeInput = { description: string; isCorrect: boolean };
 
 function freshAlternatives(): AlternativeInput[] {
   return [
-    { description: "", isCorrect: true },
+    { description: "", isCorrect: false },
+    { description: "", isCorrect: false },
+    { description: "", isCorrect: false },
     { description: "", isCorrect: false },
   ];
 }
@@ -108,8 +111,10 @@ export default function QuestionsPage() {
     setAlternatives(freshAlternatives());
   }
 
-  function setCorrect(index: number) {
-    setAlternatives((prev) => prev.map((a, i) => ({ ...a, isCorrect: i === index })));
+  function toggleCorrect(index: number) {
+    setAlternatives((prev) =>
+      prev.map((a, i) => (i === index ? { ...a, isCorrect: !a.isCorrect } : a))
+    );
   }
 
   function setDescription(index: number, value: string) {
@@ -122,15 +127,17 @@ export default function QuestionsPage() {
 
   function removeAlternative(index: number) {
     if (alternatives.length <= 2) return;
-    const updated = alternatives.filter((_, i) => i !== index);
-    if (!updated.some((a) => a.isCorrect)) updated[0].isCorrect = true;
-    setAlternatives(updated);
+    setAlternatives((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!alternatives.some((a) => a.isCorrect)) {
-      toast.error("Marque uma alternativa como correta");
+      toast.error("Marque pelo menos uma alternativa como correta");
+      return;
+    }
+    if (alternatives.some((a) => !a.description.trim())) {
+      toast.error("Preencha todas as alternativas");
       return;
     }
     const payload = { statement, alternatives };
@@ -157,7 +164,7 @@ export default function QuestionsPage() {
         }
       />
 
-      <Card>
+      <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-border/50 shadow-md">
         <CardContent className="p-0">
           {isPending ? (
             <div className="p-6 space-y-3">
@@ -182,37 +189,47 @@ export default function QuestionsPage() {
                 <TableRow>
                   <TableHead className="w-10">#</TableHead>
                   <TableHead>Enunciado</TableHead>
-                  <TableHead className="w-28">Alternativas</TableHead>
+                  <TableHead className="w-32">Alternativas</TableHead>
+                  <TableHead className="w-28">Corretas</TableHead>
                   <TableHead className="text-right w-24">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {questions.map((q, i) => (
-                  <TableRow key={q.id}>
-                    <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                    <TableCell>
-                      <span className="line-clamp-2">{q.statement}</span>
-                    </TableCell>
-                    <TableCell>{q.alternatives.length}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(q)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <ConfirmDeleteDialog
-                          resourceName="questão"
-                          trigger={
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          }
-                          onConfirm={() => deleteMutation.mutate(q.id)}
-                          isPending={deleteMutation.isPending}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {questions.map((q, i) => {
+                  const correctCount = q.alternatives.filter((a) => a.isCorrect).length;
+                  return (
+                    <TableRow key={q.id}>
+                      <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                      <TableCell>
+                        <span className="line-clamp-2">{q.statement}</span>
+                      </TableCell>
+                      <TableCell>{q.alternatives.length} alternativas</TableCell>
+                      <TableCell>
+                        <Badge variant={correctCount > 1 ? "default" : "secondary"} className="gap-1">
+                          <CheckSquare className="h-3 w-3" />
+                          {correctCount} correta{correctCount !== 1 ? "s" : ""}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(q)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <ConfirmDeleteDialog
+                            resourceName="questão"
+                            trigger={
+                              <Button variant="ghost" size="icon">
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            }
+                            onConfirm={() => deleteMutation.mutate(q.id)}
+                            isPending={deleteMutation.isPending}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -224,7 +241,7 @@ export default function QuestionsPage() {
           <DialogHeader>
             <DialogTitle>{editingQuestion ? "Editar Questão" : "Nova Questão"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="statement">Enunciado</Label>
               <Textarea
@@ -233,33 +250,38 @@ export default function QuestionsPage() {
                 rows={3}
                 value={statement}
                 onChange={(e) => setStatement(e.target.value)}
+                placeholder="Digite o enunciado da questão..."
               />
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <Label>Alternativas</Label>
+                <div>
+                  <Label>Alternativas</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Marque todas as alternativas que devem ser selecionadas pelo aluno
+                  </p>
+                </div>
                 <Button type="button" variant="outline" size="sm" onClick={addAlternative}>
                   <Plus className="h-3 w-3 mr-1" />
                   Adicionar
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Selecione o radio ao lado da alternativa correta
-              </p>
+
               {alternatives.map((alt, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={i} className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${alt.isCorrect ? "border-primary/50 bg-primary/5" : "border-border"}`}>
                   <input
-                    type="radio"
-                    name="correct"
+                    type="checkbox"
                     checked={alt.isCorrect}
-                    onChange={() => setCorrect(i)}
-                    className="h-4 w-4 shrink-0"
+                    onChange={() => toggleCorrect(i)}
+                    className="h-4 w-4 shrink-0 accent-primary cursor-pointer"
                     title="Marcar como correta"
                   />
+                  <span className="text-sm font-medium text-muted-foreground w-6 shrink-0">
+                    {String.fromCharCode(65 + i)}
+                  </span>
                   <Input
-                    placeholder={`Alternativa ${String.fromCharCode(65 + i)}`}
-                    required
+                    placeholder={`Descrição da alternativa ${String.fromCharCode(65 + i)}`}
                     value={alt.description}
                     onChange={(e) => setDescription(i, e.target.value)}
                     className="flex-1"
