@@ -4,21 +4,21 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 interface PaginationProps {
   page: number;
   totalPages: number;
-  totalItems: number;
-  perPage: number;
+  total: number;
+  limit: number;
   onPageChange: (page: number) => void;
 }
 
-export function Pagination({ page, totalPages, totalItems, perPage, onPageChange }: PaginationProps) {
+export function Pagination({ page, totalPages, total, limit, onPageChange }: PaginationProps) {
   if (totalPages <= 1) return null;
 
-  const from = (page - 1) * perPage + 1;
-  const to = Math.min(page * perPage, totalItems);
+  const from = (page - 1) * limit + 1;
+  const to = Math.min(page * limit, total);
 
   return (
     <div className="flex items-center justify-between px-2 py-3">
       <p className="text-sm text-muted-foreground">
-        {from}–{to} de {totalItems}
+        {from}–{to} de {total}
       </p>
       <div className="flex items-center gap-1">
         <Button

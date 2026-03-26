@@ -22,7 +22,7 @@ describe('Users (e2e)', () => {
   let authUserId: string;
 
   beforeAll(async () => {
-    process.env.API_KEY = TEST_API_KEY;
+    process.env.EXAM_MANAGER_API_KEY = TEST_API_KEY;
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule],

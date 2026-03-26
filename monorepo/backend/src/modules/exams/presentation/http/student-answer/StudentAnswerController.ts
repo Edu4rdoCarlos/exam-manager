@@ -21,8 +21,8 @@ export class StudentAnswerController {
     const items = result.value as unknown[];
     return HttpResponse.paginated(items, {
       page: 1,
-      perPage: items.length,
-      totalItems: items.length,
+      limit: items.length,
+      total: items.length,
       totalPages: 1,
     });
   }

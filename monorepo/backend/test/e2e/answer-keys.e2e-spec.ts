@@ -24,7 +24,7 @@ describe('Answer Keys (e2e)', () => {
   let examVersionQuestionId: string;
 
   beforeAll(async () => {
-    process.env.API_KEY = TEST_API_KEY;
+    process.env.EXAM_MANAGER_API_KEY = TEST_API_KEY;
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -227,6 +227,7 @@ describe('Answer Keys (e2e)', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({ examId, versionNumber: 2 });
       const emptyVersionId = emptyVersionRes.body.data.id;
+      await prisma.answerKey.deleteMany({ where: { examVersionId: emptyVersionId } });
 
       const response = await request(app.getHttpServer())
         .get(`/answer-keys/exam-version/${emptyVersionId}`)

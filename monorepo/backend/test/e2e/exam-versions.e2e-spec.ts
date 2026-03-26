@@ -22,7 +22,7 @@ describe('Exam Versions (e2e)', () => {
   let questionId: string;
 
   beforeAll(async () => {
-    process.env.API_KEY = TEST_API_KEY;
+    process.env.EXAM_MANAGER_API_KEY = TEST_API_KEY;
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -34,6 +34,25 @@ describe('Exam Versions (e2e)', () => {
     await app.init();
 
     prisma = module.get(PrismaService);
+
+    const leftoverUser = await prisma.user.findUnique({ where: { email: 'version-teacher-e2e@test.com' } });
+    if (leftoverUser) {
+      const leftoverExams = await prisma.exam.findMany({ where: { teacherId: leftoverUser.id } });
+      for (const exam of leftoverExams) {
+        await prisma.answerKey.deleteMany({ where: { examVersion: { examId: exam.id } } });
+        await prisma.examVersionAlternative.deleteMany({ where: { examVersionQuestion: { examVersion: { examId: exam.id } } } });
+        await prisma.examVersionQuestion.deleteMany({ where: { examVersion: { examId: exam.id } } });
+        await prisma.examVersion.deleteMany({ where: { examId: exam.id } });
+        await prisma.examQuestion.deleteMany({ where: { examId: exam.id } });
+      }
+      await prisma.exam.deleteMany({ where: { teacherId: leftoverUser.id } });
+      const leftoverQuestions = await prisma.question.findMany({ where: { statement: 'E2E version question' } });
+      for (const q of leftoverQuestions) {
+        await prisma.alternative.deleteMany({ where: { questionId: q.id } });
+        await prisma.question.delete({ where: { id: q.id } });
+      }
+      await prisma.user.delete({ where: { id: leftoverUser.id } });
+    }
 
     const teacher = await prisma.user.create({
       data: { name: 'Version Teacher', email: 'version-teacher-e2e@test.com', passwordHash: sha256('password123') },
@@ -76,6 +95,7 @@ describe('Exam Versions (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.answerKey.deleteMany({ where: { examVersion: { examId } } });
     await prisma.examVersionAlternative.deleteMany({ where: { examVersionQuestion: { examVersion: { examId } } } });
     await prisma.examVersionQuestion.deleteMany({ where: { examVersion: { examId } } });
     await prisma.examVersion.deleteMany({ where: { examId } });

@@ -98,8 +98,8 @@ export interface GradeReport {
 
 export interface PaginationMetadata {
   page: number;
-  perPage: number;
-  totalItems: number;
+  limit: number;
+  total: number;
   totalPages: number;
 }
 

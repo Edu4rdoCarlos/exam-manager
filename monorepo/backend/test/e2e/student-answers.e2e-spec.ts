@@ -25,7 +25,7 @@ describe('Student Answers (e2e)', () => {
   let examVersionId: string;
 
   beforeAll(async () => {
-    process.env.API_KEY = TEST_API_KEY;
+    process.env.EXAM_MANAGER_API_KEY = TEST_API_KEY;
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -43,6 +43,7 @@ describe('Student Answers (e2e)', () => {
       const leftoverExams = await prisma.exam.findMany({ where: { teacherId: leftoverUser.id } });
       for (const exam of leftoverExams) {
         await prisma.studentAnswer.deleteMany({ where: { examVersionId: { in: (await prisma.examVersion.findMany({ where: { examId: exam.id } })).map((v) => v.id) } } });
+        await prisma.answerKey.deleteMany({ where: { examVersion: { examId: exam.id } } });
         await prisma.examVersionAlternative.deleteMany({ where: { examVersionQuestion: { examVersion: { examId: exam.id } } } });
         await prisma.examVersionQuestion.deleteMany({ where: { examVersion: { examId: exam.id } } });
         await prisma.examVersion.deleteMany({ where: { examId: exam.id } });
@@ -101,6 +102,7 @@ describe('Student Answers (e2e)', () => {
 
   afterAll(async () => {
     await prisma.studentAnswer.deleteMany({ where: { examVersionId } });
+    await prisma.answerKey.deleteMany({ where: { examVersion: { examId } } });
     await prisma.examVersionAlternative.deleteMany({ where: { examVersionQuestion: { examVersion: { examId } } } });
     await prisma.examVersionQuestion.deleteMany({ where: { examVersion: { examId } } });
     await prisma.examVersion.deleteMany({ where: { examId } });

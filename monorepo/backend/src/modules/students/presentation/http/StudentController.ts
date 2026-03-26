@@ -10,7 +10,6 @@ import { CreateStudentDocs, GetStudentDocs } from './docs/students.docs';
 
 @ApiBearerAuth()
 @ApiTags('students')
-@UseGuards(JwtAuthGuard)
 @Controller('students')
 export class StudentController {
   constructor(
@@ -20,12 +19,13 @@ export class StudentController {
   ) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findAll(
     @Query('page') page = '1',
     @Query('perPage') perPage = '20',
   ): Promise<HttpPaginatedResponseBody<unknown>> {
     const { students, totalItems, totalPages } = await this.listStudents.execute(Number(page), Number(perPage));
-    return HttpResponse.paginated(students, { page: Number(page), perPage: Number(perPage), totalItems, totalPages });
+    return HttpResponse.paginated(students, { page: Number(page), limit: Number(perPage), total: totalItems, totalPages });
   }
 
   @Post()
@@ -37,6 +37,7 @@ export class StudentController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   @GetStudentDocs()
   async findOne(@Param('id') id: string): Promise<HttpResponseBody<unknown>> {
     const result = await this.getStudent.execute(id);

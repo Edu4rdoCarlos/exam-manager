@@ -34,8 +34,8 @@ export class ExamVersionController {
     const items = (await this.getExamVersion.findByExamId(examId)) as unknown[];
     return HttpResponse.paginated(items, {
       page: 1,
-      perPage: items.length,
-      totalItems: items.length,
+      limit: items.length,
+      total: items.length,
       totalPages: 1,
     });
   }

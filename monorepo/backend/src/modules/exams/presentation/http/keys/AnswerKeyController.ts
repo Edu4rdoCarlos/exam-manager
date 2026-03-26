@@ -28,8 +28,8 @@ export class AnswerKeyController {
     const items = result.value as unknown[];
     return HttpResponse.paginated(items, {
       page: 1,
-      perPage: items.length,
-      totalItems: items.length,
+      limit: items.length,
+      total: items.length,
       totalPages: 1,
     });
   }
@@ -40,8 +40,8 @@ export class AnswerKeyController {
     const items = (await this.getAnswerKeys.execute(examVersionId)) as unknown[];
     return HttpResponse.paginated(items, {
       page: 1,
-      perPage: items.length,
-      totalItems: items.length,
+      limit: items.length,
+      total: items.length,
       totalPages: 1,
     });
   }

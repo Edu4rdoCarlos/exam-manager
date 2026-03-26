@@ -424,8 +424,8 @@ export default function ExamDetailPage() {
                         <Pagination
                           page={studentsMeta.page}
                           totalPages={studentsMeta.totalPages}
-                          totalItems={studentsMeta.totalItems}
-                          perPage={studentsMeta.perPage}
+                          total={studentsMeta.total}
+                          limit={studentsMeta.limit}
                           onPageChange={setStudentsPage}
                         />
                       )}

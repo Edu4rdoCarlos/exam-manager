@@ -30,7 +30,7 @@ export class GradeController {
   async findByExamVersion(@Param('examVersionId') examVersionId: string): Promise<HttpPaginatedResponseBody<GradeResponseDto>> {
     const grades = await this.getGrades.findByExamVersion(examVersionId);
     const items = grades.map((g: Grade) => new GradeResponseDto(g.id, g.studentId, g.examVersionId, g.correctionId, g.score));
-    return HttpResponse.paginated(items, { page: 1, perPage: items.length, totalItems: items.length, totalPages: 1 });
+    return HttpResponse.paginated(items, { page: 1, limit: items.length, total: items.length, totalPages: 1 });
   }
 
   @Get('correction/:correctionId')
@@ -38,7 +38,7 @@ export class GradeController {
   async findByCorrection(@Param('correctionId') correctionId: string): Promise<HttpPaginatedResponseBody<GradeResponseDto>> {
     const grades = await this.getGrades.findByCorrection(correctionId);
     const items = grades.map((g: Grade) => new GradeResponseDto(g.id, g.studentId, g.examVersionId, g.correctionId, g.score));
-    return HttpResponse.paginated(items, { page: 1, perPage: items.length, totalItems: items.length, totalPages: 1 });
+    return HttpResponse.paginated(items, { page: 1, limit: items.length, total: items.length, totalPages: 1 });
   }
 
   @Get('report/correction/:correctionId')
@@ -56,6 +56,6 @@ export class GradeController {
           new GradeReportExamVersionDto(r.examVersion.id, r.examVersion.versionNumber),
         ),
     );
-    return HttpResponse.paginated(items, { page: 1, perPage: items.length, totalItems: items.length, totalPages: 1 });
+    return HttpResponse.paginated(items, { page: 1, limit: items.length, total: items.length, totalPages: 1 });
   }
 }
