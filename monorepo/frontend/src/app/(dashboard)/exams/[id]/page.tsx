@@ -315,21 +315,19 @@ export default function ExamDetailPage() {
 
   return (
     <div className="space-y-6">
+      <Button variant="ghost" onClick={() => router.push("/dashboard")} className="mb-2 -ml-2">
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Voltar
+      </Button>
       <PageHeader
         title={exam?.title ?? "Prova"}
         description={[exam?.subject, exam?.examDate ? formatDate(exam.examDate) : null]
           .filter(Boolean)
           .join(" — ")}
         action={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push(`/exams/${id}/edit`)}>
-              Editar
-            </Button>
-            <Button variant="outline" onClick={() => router.push("/dashboard")}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-          </div>
+          <Button variant="outline" onClick={() => router.push(`/exams/${id}/edit`)}>
+            Editar
+          </Button>
         }
       />
 

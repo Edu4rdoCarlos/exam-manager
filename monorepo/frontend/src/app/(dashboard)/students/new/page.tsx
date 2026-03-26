@@ -33,15 +33,13 @@ export default function NewStudentPage() {
 
   return (
     <div>
+      <Button variant="ghost" onClick={() => router.back()} className="mb-2 -ml-2">
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Voltar
+      </Button>
       <PageHeader
         title="Cadastrar Aluno"
         description="Adicione um novo aluno ao sistema"
-        action={
-          <Button variant="outline" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-        }
       />
 
       <form onSubmit={handleSubmit} className="max-w-md mx-auto">

@@ -71,15 +71,13 @@ export default function NewExamPage() {
 
   return (
     <div>
+      <Button variant="ghost" onClick={() => router.back()} className="mb-2 -ml-2">
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Voltar
+      </Button>
       <PageHeader
         title="Nova Prova"
         description="Crie uma nova prova para seus alunos"
-        action={
-          <Button variant="outline" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-        }
       />
 
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">

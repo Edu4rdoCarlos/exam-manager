@@ -94,15 +94,13 @@ export default function EditExamPage() {
 
   return (
     <div>
+      <Button variant="ghost" onClick={() => router.push(`/exams/${id}`)} className="mb-2 -ml-2">
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Voltar
+      </Button>
       <PageHeader
         title="Editar Prova"
         description={exam?.title}
-        action={
-          <Button variant="outline" onClick={() => router.push(`/exams/${id}`)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-        }
       />
 
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
