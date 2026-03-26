@@ -51,22 +51,35 @@ export class PdfMakeExamPdfAdapter implements ExamPdfPort {
       }),
       content: [
         { text: data.examTitle, style: 'header' },
-        { text: `Disciplina: ${data.examSubject}`, style: 'subheader' },
-        { text: `Data: ${examDateText}`, style: 'subheader' },
-        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5 }], margin: [0, 8, 0, 8] },
+        {
+          columns: [
+            { text: `Disciplina: ${data.examSubject}`, style: 'subheader' },
+            { text: `Data: ${examDateText}`, style: 'subheader', alignment: 'right' },
+          ],
+          margin: [0, 2, 0, 6],
+        },
+        {
+          table: {
+            widths: ['*', '*'],
+            body: [
+              [
+                { text: 'Nome: _______________________________________________', style: 'studentField', border: [false, false, false, false] },
+                { text: 'CPF: ______________________________', style: 'studentField', border: [false, false, false, false] },
+              ],
+            ],
+          },
+          margin: [0, 0, 0, 6],
+        },
+        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5 }], margin: [0, 0, 0, 10] },
         ...questionContent,
-        { text: '\n\n\n' },
-        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5 }], margin: [0, 0, 0, 12] },
-        { text: 'Nome: _______________________________________________', style: 'studentField' },
-        { text: 'CPF:   _______________________________________________', style: 'studentField', margin: [0, 8, 0, 0] },
       ],
       styles: {
-        header: { fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 6] },
+        header: { fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 8] },
         subheader: { fontSize: 11, margin: [0, 2, 0, 2] },
         question: { fontSize: 11, bold: true },
         alternative: { fontSize: 10 },
         answerField: { fontSize: 10, italics: true },
-        studentField: { fontSize: 12 },
+        studentField: { fontSize: 11 },
       },
     };
 
