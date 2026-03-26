@@ -1,5 +1,5 @@
 import { Body, ConflictException, Controller, Get, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/JwtAuthGuard';
 import { CreateStudent } from '../../application/services/CreateStudent';
 import { GetStudent } from '../../application/services/GetStudent';
@@ -7,7 +7,9 @@ import { HttpResponse, HttpResponseBody } from '../../../../shared/utils/HttpRes
 import { CreateStudentDto } from './dto/CreateStudentDto';
 import { CreateStudentDocs, GetStudentDocs } from './docs/students.docs';
 
+@ApiBearerAuth()
 @ApiTags('students')
+@UseGuards(JwtAuthGuard)
 @Controller('students')
 export class StudentController {
   constructor(
@@ -23,7 +25,6 @@ export class StudentController {
     return HttpResponse.of(result.value);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @GetStudentDocs()
   async findOne(@Param('id') id: string): Promise<HttpResponseBody<unknown>> {

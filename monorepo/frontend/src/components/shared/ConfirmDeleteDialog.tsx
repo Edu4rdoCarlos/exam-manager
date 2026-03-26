@@ -13,7 +13,7 @@ import {
 } from "@/components/primitives/alert-dialog";
 
 interface ConfirmDeleteDialogProps {
-  trigger: React.ReactNode;
+  trigger: React.ReactElement;
   resourceName: string;
   onConfirm: () => void;
   isPending?: boolean;
@@ -27,9 +27,7 @@ export function ConfirmDeleteDialog({
 }: ConfirmDeleteDialogProps) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<span />}>
-        {trigger}
-      </AlertDialogTrigger>
+      <AlertDialogTrigger render={trigger} />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Excluir {resourceName}?</AlertDialogTitle>

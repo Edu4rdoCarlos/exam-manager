@@ -45,6 +45,14 @@ export class PrismaQuestionRepository implements QuestionRepository {
     if (!existing) return null;
 
     if (data.alternatives !== undefined) {
+      const currentAlternatives = await this.prisma.alternative.findMany({
+        where: { questionId: id },
+        select: { id: true },
+      });
+      const alternativeIds = currentAlternatives.map((a) => a.id);
+      await this.prisma.examVersionAlternative.deleteMany({
+        where: { alternativeId: { in: alternativeIds } },
+      });
       await this.prisma.alternative.deleteMany({ where: { questionId: id } });
     }
 
@@ -68,6 +76,14 @@ export class PrismaQuestionRepository implements QuestionRepository {
   }
 
   async delete(id: string): Promise<void> {
+    const alternatives = await this.prisma.alternative.findMany({
+      where: { questionId: id },
+      select: { id: true },
+    });
+    const alternativeIds = alternatives.map((a) => a.id);
+    await this.prisma.examVersionAlternative.deleteMany({
+      where: { alternativeId: { in: alternativeIds } },
+    });
     await this.prisma.alternative.deleteMany({ where: { questionId: id } });
     await this.prisma.question.delete({ where: { id } });
   }
