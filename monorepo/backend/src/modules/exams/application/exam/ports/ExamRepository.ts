@@ -12,6 +12,7 @@ export interface CreateExamData {
 
 export interface ExamAlternativeData {
   readonly id: string;
+  readonly isCorrect: boolean;
 }
 
 export interface ExamQuestionData {

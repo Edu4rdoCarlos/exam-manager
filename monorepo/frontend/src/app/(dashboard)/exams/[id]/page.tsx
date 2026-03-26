@@ -13,7 +13,6 @@ import {
   getGradeReport,
   getCorrectionsByExam,
 } from "@/lib/api/corrections";
-import { getAnswerKeysByVersion, createAnswerKeys } from "@/lib/api/keys";
 import { downloadApiFile } from "@/lib/api/client";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/primitives/button";
@@ -46,8 +45,8 @@ import {
 } from "@/components/primitives/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/primitives/skeleton";
-import { ArrowLeft, Plus, FileDown, Key, Check, Upload } from "lucide-react";
-import type { Correction, ExamVersion, AnswerFormat } from "@/lib/types";
+import { ArrowLeft, Plus, FileDown, Check, Upload } from "lucide-react";
+import type { Correction, ExamVersion } from "@/lib/types";
 
 const FORMAT_LABELS: Record<string, string> = {
   letters: "Letras (A, B, C...)",
@@ -64,153 +63,6 @@ function formatDate(value: string | null): string {
   return new Date(value).toLocaleDateString("pt-BR");
 }
 
-interface GabaritoDialogProps {
-  version: ExamVersion;
-  answerFormat: AnswerFormat;
-  open: boolean;
-  onClose: () => void;
-}
-
-function GabaritoDialog({ version, answerFormat, open, onClose }: GabaritoDialogProps) {
-  const queryClient = useQueryClient();
-  const [selectedLabels, setSelectedLabels] = useState<Record<string, string[]>>({});
-
-  const { data: keys, isPending: keysPending } = useQuery({
-    queryKey: ["answer-keys", version.id],
-    queryFn: () => getAnswerKeysByVersion(version.id),
-    enabled: open,
-  });
-
-  const createKeysMutation = useMutation({
-    mutationFn: createAnswerKeys,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["answer-keys", version.id] });
-      toast.success("Gabarito salvo");
-      onClose();
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
-
-  const questions = [...version.examVersionQuestions].sort((a, b) => a.position - b.position);
-  const hasKeys = keys && keys.length > 0;
-
-  const existingKeysMap: Record<string, string> = {};
-  if (keys) {
-    for (const k of keys) {
-      existingKeysMap[k.examVersionQuestionId] = k.correctAnswer;
-    }
-  }
-
-  function toggleLabel(questionId: string, label: string) {
-    setSelectedLabels((prev) => {
-      const current = prev[questionId] ?? [];
-      const updated = current.includes(label)
-        ? current.filter((l) => l !== label)
-        : [...current, label];
-      return { ...prev, [questionId]: updated };
-    });
-  }
-
-  function buildCorrectAnswer(questionId: string): string {
-    const labels = (selectedLabels[questionId] ?? []).sort();
-    if (answerFormat === "powers_of_two") {
-      const sum = labels.reduce((acc, l) => acc + (parseInt(l, 10) || 0), 0);
-      return String(sum);
-    }
-    return labels.join(",");
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const allAnswered = questions.every((q) => (selectedLabels[q.id] ?? []).length > 0);
-    if (!allAnswered) {
-      toast.error("Selecione pelo menos uma alternativa correta por questão");
-      return;
-    }
-    createKeysMutation.mutate({
-      examVersionId: version.id,
-      keys: questions.map((q) => ({
-        examVersionQuestionId: q.id,
-        correctAnswer: buildCorrectAnswer(q.id),
-      })),
-    });
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Gabarito — Versão {version.versionNumber}</DialogTitle>
-        </DialogHeader>
-
-        {keysPending ? (
-          <div className="space-y-2 py-4">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
-        ) : hasKeys ? (
-          <div className="space-y-3 py-2">
-            <p className="text-sm text-muted-foreground">Gabarito já definido:</p>
-            {questions.map((q) => (
-              <div key={q.id} className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Questão {q.position}</span>
-                <Badge variant="secondary">{existingKeysMap[q.id] ?? "—"}</Badge>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <p className="text-sm text-muted-foreground">
-              Marque as alternativas corretas de cada questão nesta versão.
-            </p>
-            {questions.map((q) => {
-              const alts = [...q.examVersionAlternatives].sort((a, b) => a.position - b.position);
-              const selected = selectedLabels[q.id] ?? [];
-              return (
-                <div key={q.id} className="space-y-2">
-                  <p className="text-sm font-medium">Questão {q.position}</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {alts.map((alt) => {
-                      const checked = selected.includes(alt.label);
-                      return (
-                        <button
-                          key={alt.id}
-                          type="button"
-                          onClick={() => toggleLabel(q.id, alt.label)}
-                          className={`flex items-center justify-center rounded-lg border py-2 text-sm font-medium transition-colors ${
-                            checked
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border hover:border-primary/50 hover:bg-primary/5"
-                          }`}
-                        >
-                          {alt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {selected.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Resposta:{" "}
-                      <span className="font-medium text-foreground">{buildCorrectAnswer(q.id)}</span>
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createKeysMutation.isPending}>
-                {createKeysMutation.isPending ? "Salvando..." : "Salvar Gabarito"}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export default function ExamDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -220,7 +72,6 @@ export default function ExamDetailPage() {
 
   const [createVersionOpen, setCreateVersionOpen] = useState(false);
   const [versionCount, setVersionCount] = useState("1");
-  const [gabaritoVersion, setGabaritoVersion] = useState<ExamVersion | null>(null);
   const [createCorrectionOpen, setCreateCorrectionOpen] = useState(false);
   const [correctionMode, setCorrectionMode] = useState<"strict" | "lenient">("strict");
   const [csvCorrectionId, setCsvCorrectionId] = useState<string | null>(null);
@@ -419,14 +270,6 @@ export default function ExamDetailPage() {
                             >
                               <FileDown className="h-4 w-4 mr-1" />
                               Gabarito CSV
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setGabaritoVersion(v)}
-                            >
-                              <Key className="h-4 w-4 mr-1" />
-                              Definir Gabarito
                             </Button>
                           </div>
                         </TableCell>
@@ -678,15 +521,6 @@ export default function ExamDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: gabarito */}
-      {gabaritoVersion && exam && (
-        <GabaritoDialog
-          version={gabaritoVersion}
-          answerFormat={exam.answerFormat}
-          open={!!gabaritoVersion}
-          onClose={() => setGabaritoVersion(null)}
-        />
-      )}
     </div>
   );
 }

@@ -41,7 +41,7 @@ export class PrismaExamRepository implements ExamRepository {
     type ExamQuestionRow = {
       questionId: string;
       position: number;
-      question: { alternatives: { id: string }[] };
+      question: { alternatives: { id: string; isCorrect: boolean }[] };
     };
 
     return {
@@ -49,7 +49,7 @@ export class PrismaExamRepository implements ExamRepository {
       examQuestions: (row.examQuestions as ExamQuestionRow[]).map((eq) => ({
         questionId: eq.questionId,
         position: eq.position,
-        alternatives: eq.question.alternatives.map((a) => ({ id: a.id })),
+        alternatives: eq.question.alternatives.map((a) => ({ id: a.id, isCorrect: a.isCorrect })),
       })),
     };
   }
