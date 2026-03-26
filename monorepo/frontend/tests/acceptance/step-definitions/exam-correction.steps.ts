@@ -15,6 +15,7 @@ declare module '../support/world' {
     answerKeys?: Array<{ examVersionQuestionId: string; correctAnswer: string }>;
     correctionId?: string;
     registeredCpfs?: Set<string>;
+    studentIdByCpf?: Map<string, string>;
     lastGradesCount?: number;
     lastError?: Error | null;
   }
@@ -34,7 +35,9 @@ async function getToken(world: ExamManagerWorld): Promise<string> {
 }
 
 function decodeTeacherId(token: string): string {
-  const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString('utf-8')) as { sub: string };
+  const payload = JSON.parse(
+    Buffer.from(token.split('.')[1], 'base64').toString('utf-8'),
+  ) as { sub: string };
   return payload.sub;
 }
 
@@ -80,9 +83,63 @@ async function uploadCsv(
 }
 
 function buildCsv(rows: Array<{ cpf: string; versionId: string; answers: string[] }>): string {
-  const header = 'cpf,examVersionId,answers';
+  const header = 'cpf,examVersionId,answer1,...';
   const lines = rows.map((r) => [r.cpf, r.versionId, ...r.answers].join(','));
   return [header, ...lines].join('\n');
+}
+
+function normalizeCpf(cpf: string): string {
+  return cpf.replace(/\D/g, '');
+}
+
+async function getOrCreateStudent(
+  world: ExamManagerWorld,
+  token: string,
+  cpf: string,
+  name: string,
+): Promise<{ id: string; cpf: string }> {
+  world.studentIdByCpf = world.studentIdByCpf ?? new Map();
+  world.registeredCpfs = world.registeredCpfs ?? new Set();
+
+  try {
+    const student = await api<{ id: string; cpf: string }>(token, 'POST', '/students', { cpf, name });
+    world.studentIdByCpf.set(cpf, student.id);
+    world.registeredCpfs.add(cpf);
+    return student;
+  } catch {
+    const students = await api<Array<{ id: string; cpf: string }>>(
+      token,
+      'GET',
+      '/students?perPage=1000',
+    );
+    const found = students.find((s) => normalizeCpf(s.cpf) === normalizeCpf(cpf));
+    if (!found) throw new Error(`Student with CPF ${cpf} not found after conflict`);
+    world.studentIdByCpf.set(cpf, found.id);
+    world.registeredCpfs.add(cpf);
+    return found;
+  }
+}
+
+async function getGradeForStudent(
+  token: string,
+  correctionId: string,
+  cpf: string,
+): Promise<{ score: number; student: { cpf: string }; exam: { title: string }; examVersion: { versionNumber: number } }> {
+  const reports = await api<
+    Array<{
+      score: number;
+      student: { id: string; name: string; cpf: string };
+      exam: { id: string; title: string; subject: string };
+      examVersion: { id: string; versionNumber: number };
+    }>
+  >(token, 'GET', `/grades/report/correction/${correctionId}`);
+
+  const report = reports.find((r) => normalizeCpf(r.student.cpf) === normalizeCpf(cpf));
+  if (!report) {
+    const cpfs = reports.map((r) => r.student.cpf).join(', ');
+    throw new Error(`No grade found for CPF ${cpf}. Available: [${cpfs}]`);
+  }
+  return report;
 }
 
 async function setupVersion(world: ExamManagerWorld, token: string): Promise<void> {
@@ -101,10 +158,7 @@ async function setupVersion(world: ExamManagerWorld, token: string): Promise<voi
   );
 }
 
-function correctAnswerForQuestion(
-  world: ExamManagerWorld,
-  questionIndex: number,
-): string {
+function correctAnswerForQuestion(world: ExamManagerWorld, questionIndex: number): string {
   const sorted = [...(world.versionQuestions ?? [])].sort((a, b) => a.position - b.position);
   const evq = sorted[questionIndex];
   const key = world.answerKeys?.find((k) => k.examVersionQuestionId === evq.id);
@@ -115,7 +169,7 @@ function wrongAnswerFor(correct: string): string {
   return correct === 'Z' ? 'A' : 'Z';
 }
 
-// ─── Given: shared background ────────────────────────────────────────────────
+// ─── Given: shared background ─────────────────────────────────────────────────
 
 Given(
   'a question exists with statement {string} and correct alternative {string}',
@@ -164,15 +218,7 @@ Given(
   { timeout: 15000 },
   async function (this: ExamManagerWorld, cpf: string, name: string) {
     const token = await getToken(this);
-    this.registeredCpfs = this.registeredCpfs ?? new Set();
-
-    try {
-      await api(token, 'POST', '/students', { cpf, name });
-    } catch {
-      // acceptable if student already exists from a prior test run
-    }
-
-    this.registeredCpfs.add(cpf);
+    await getOrCreateStudent(this, token, cpf, name);
   },
 );
 
@@ -369,13 +415,37 @@ When(
 );
 
 When(
+  'I upload a CSV where {string} answers correctly and {string} answers incorrectly',
+  { timeout: 20000 },
+  async function (this: ExamManagerWorld, correctCpf: string, wrongCpf: string) {
+    const token = await getToken(this);
+    const sorted = [...(this.versionQuestions ?? [])].sort((a, b) => a.position - b.position);
+    const keyMap = new Map((this.answerKeys ?? []).map((k) => [k.examVersionQuestionId, k.correctAnswer]));
+    const correctAnswers = sorted.map((q) => keyMap.get(q.id) ?? 'A');
+    const wrongAnswers = sorted.map((q) => wrongAnswerFor(keyMap.get(q.id) ?? 'A'));
+    const csv = buildCsv([
+      { cpf: correctCpf, versionId: this.versionId!, answers: correctAnswers },
+      { cpf: wrongCpf, versionId: this.versionId!, answers: wrongAnswers },
+    ]);
+
+    try {
+      const result = await uploadCsv(token, this.correctionId!, csv);
+      this.lastGradesCount = result.gradesCount;
+      this.lastError = null;
+    } catch (err) {
+      this.lastError = err as Error;
+    }
+  },
+);
+
+When(
   'I upload a CSV with the student CPF {string} answering with a valid subset',
   { timeout: 20000 },
   async function (this: ExamManagerWorld, cpf: string) {
     const token = await getToken(this);
     const sorted = [...(this.versionQuestions ?? [])].sort((a, b) => a.position - b.position);
     const keyMap = new Map((this.answerKeys ?? []).map((k) => [k.examVersionQuestionId, k.correctAnswer]));
-    // For powers_of_two lenient mode, the exact correct answer is always a valid subset of itself
+    // For powers_of_two lenient mode, the exact correct answer is a valid subset of itself
     const answers = sorted.map((q) => keyMap.get(q.id) ?? '1');
     const csv = buildCsv([{ cpf, versionId: this.versionId!, answers }]);
 
@@ -448,6 +518,29 @@ When(
 );
 
 When(
+  'the student {string} submits correct answers for all questions via API',
+  { timeout: 20000 },
+  async function (this: ExamManagerWorld, cpf: string) {
+    const token = await getToken(this);
+    const studentId = this.studentIdByCpf?.get(cpf);
+    assert.ok(studentId, `Student ID not found for CPF ${cpf} — was the student registered?`);
+
+    const sorted = [...(this.versionQuestions ?? [])].sort((a, b) => a.position - b.position);
+    const keyMap = new Map((this.answerKeys ?? []).map((k) => [k.examVersionQuestionId, k.correctAnswer]));
+    const answers = sorted.map((vq) => ({
+      questionId: vq.questionId,
+      answer: keyMap.get(vq.id) ?? 'A',
+    }));
+
+    await api(token, 'POST', '/student-answers', {
+      studentId,
+      examVersionId: this.versionId,
+      answers,
+    });
+  },
+);
+
+When(
   'I apply the correction',
   { timeout: 15000 },
   async function (this: ExamManagerWorld) {
@@ -513,34 +606,26 @@ Then('the correction should be applied successfully', function (this: ExamManage
 Then(
   'the student {string} should have a score of {float}',
   { timeout: 15000 },
-  async function (this: ExamManagerWorld, _cpf: string, expectedScore: number) {
+  async function (this: ExamManagerWorld, cpf: string, expectedScore: number) {
     const token = await getToken(this);
-    const grades = await api<Array<{ score: number }>>(
-      token,
-      'GET',
-      `/grades/correction/${this.correctionId}`,
+    const report = await getGradeForStudent(token, this.correctionId!, cpf);
+    assert.strictEqual(
+      report.score,
+      expectedScore,
+      `Expected score ${expectedScore} for CPF ${cpf}, got ${report.score}`,
     );
-    assert.ok(grades.length > 0, 'Expected at least one grade');
-    const grade = grades[grades.length - 1];
-    assert.strictEqual(grade.score, expectedScore, `Expected score ${expectedScore}, got ${grade.score}`);
   },
 );
 
 Then(
   'the student {string} should have a score greater than 0.0 and less than 1.0',
   { timeout: 15000 },
-  async function (this: ExamManagerWorld, _cpf: string) {
+  async function (this: ExamManagerWorld, cpf: string) {
     const token = await getToken(this);
-    const grades = await api<Array<{ score: number }>>(
-      token,
-      'GET',
-      `/grades/correction/${this.correctionId}`,
-    );
-    assert.ok(grades.length > 0, 'Expected at least one grade');
-    const grade = grades[grades.length - 1];
+    const report = await getGradeForStudent(token, this.correctionId!, cpf);
     assert.ok(
-      grade.score > 0 && grade.score < 1,
-      `Expected score strictly between 0 and 1, got ${grade.score}`,
+      report.score > 0 && report.score < 1,
+      `Expected score strictly between 0 and 1 for CPF ${cpf}, got ${report.score}`,
     );
   },
 );
@@ -564,14 +649,35 @@ Then(
   { timeout: 15000 },
   async function (this: ExamManagerWorld, expectedScore: number) {
     const token = await getToken(this);
-    const grades = await api<Array<{ score: number }>>(
-      token,
-      'GET',
-      `/grades/correction/${this.correctionId}`,
+    const cpf = this.registeredCpfs?.values().next().value ?? '111.222.333-44';
+    const report = await getGradeForStudent(token, this.correctionId!, cpf);
+    assert.strictEqual(
+      report.score,
+      expectedScore,
+      `Expected score ${expectedScore} for CPF ${cpf}, got ${report.score}`,
     );
-    assert.ok(grades.length > 0, 'Expected at least one grade');
-    const grade = grades[grades.length - 1];
-    assert.strictEqual(grade.score, expectedScore, `Expected score ${expectedScore}, got ${grade.score}`);
+  },
+);
+
+Then(
+  'the grade report for {string} should contain the exam title and version number',
+  { timeout: 15000 },
+  async function (this: ExamManagerWorld, cpf: string) {
+    const token = await getToken(this);
+    const report = await getGradeForStudent(token, this.correctionId!, cpf);
+    assert.ok(
+      report.exam.title.length > 0,
+      `Expected exam title to be present in grade report for CPF ${cpf}`,
+    );
+    assert.ok(
+      report.examVersion.versionNumber > 0,
+      `Expected version number to be present in grade report for CPF ${cpf}`,
+    );
+    assert.strictEqual(
+      report.score,
+      1.0,
+      `Expected score 1.0 in grade report for CPF ${cpf}, got ${report.score}`,
+    );
   },
 );
 

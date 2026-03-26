@@ -10,7 +10,7 @@ Feature: Exam Correction
     And an exam exists with that question and answer format "letters"
     And a student is registered with CPF "111.222.333-44" and name "Aluno Teste"
 
-  # ─── Version & Answer Key ───────────────────────────────────────────────────
+  # ─── Version & Answer Key ────────────────────────────────────────────────────
 
   @happy-path
   Scenario: Generating exam versions automatically creates the answer key
@@ -19,7 +19,7 @@ Feature: Exam Correction
     Then 1 exam version should exist
     And an answer key should be automatically generated for that version
 
-  # ─── Full Correction Flow ────────────────────────────────────────────────────
+  # ─── Full Correction Flow via CSV ────────────────────────────────────────────
 
   @happy-path
   Scenario: Student answers all questions correctly and receives full score
@@ -46,13 +46,23 @@ Feature: Exam Correction
     And the student "111.222.333-44" should have a score of 0.0
 
   @happy-path
-  Scenario: Multiple students are graded in the same correction
+  Scenario: Multiple students are graded in the same correction run
     Given the exam has 1 generated version with an answer key
     And a student is registered with CPF "555.666.777-88" and name "Outro Aluno"
     And a correction exists for the exam in "strict" mode
     When I upload a CSV with answers for both "111.222.333-44" and "555.666.777-88"
     Then the correction should be applied successfully
     And grades should be emitted for 2 students
+
+  @happy-path
+  Scenario: Two students with opposite answers each receive the correct individual score
+    Given the exam has 1 generated version with an answer key
+    And a student is registered with CPF "555.666.777-88" and name "Segundo Aluno"
+    And a correction exists for the exam in "strict" mode
+    When I upload a CSV where "111.222.333-44" answers correctly and "555.666.777-88" answers incorrectly
+    Then the correction should be applied successfully
+    And the student "111.222.333-44" should have a score of 1.0
+    And the student "555.666.777-88" should have a score of 0.0
 
   # ─── Lenient Mode ────────────────────────────────────────────────────────────
 
@@ -64,7 +74,28 @@ Feature: Exam Correction
     Then the correction should be applied successfully
     And the student "111.222.333-44" should have a score of 1.0
 
-  # ─── Error Cases ─────────────────────────────────────────────────────────────
+  # ─── Direct API Submission ────────────────────────────────────────────────────
+
+  @happy-path
+  Scenario: Answers submitted via direct API are graded when correction is applied
+    Given the exam has 1 generated version with an answer key
+    And a correction exists for the exam in "strict" mode
+    When the student "111.222.333-44" submits correct answers for all questions via API
+    And I apply the correction
+    Then the correction should be applied successfully
+    And the student "111.222.333-44" should have a score of 1.0
+
+  # ─── Grade Report ─────────────────────────────────────────────────────────────
+
+  @happy-path
+  Scenario: Grade report links each score to the correct student, exam and version
+    Given the exam has 1 generated version with an answer key
+    And a correction exists for the exam in "strict" mode
+    When I upload a CSV with the student CPF "111.222.333-44" answering all questions correctly
+    Then the correction should be applied successfully
+    And the grade report for "111.222.333-44" should contain the exam title and version number
+
+  # ─── Error Cases ──────────────────────────────────────────────────────────────
 
   @error-case
   Scenario: CSV references a student not registered in the system
@@ -79,7 +110,7 @@ Feature: Exam Correction
     When I upload a CSV referencing a non-existent exam version id
     Then the correction should fail with a version not found error
 
-  # ─── Edge Cases ──────────────────────────────────────────────────────────────
+  # ─── Edge Cases ───────────────────────────────────────────────────────────────
 
   @edge-case
   Scenario Outline: Score boundary values depending on correct answers count
