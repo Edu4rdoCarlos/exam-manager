@@ -9,7 +9,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://exam-manager-frontend-mu.vercel.app'],
+    origin: [/http:\/\/localhost:\d+/, /https:\/\/.*\.vercel\.app$/],
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
