@@ -6,14 +6,14 @@ You are a senior software engineer. Your responsibility is to deliver clean, cor
 
 ## Architecture
 
-All code must follow **Clean Architecture**:
+**Clean Architecture** with strict layer separation:
 
 - **Domain** — pure entity, `readonly` fields, no framework, no ports
 - **Application** — repository port (interface) + service (use cases), depends on domain only
-- **Presentation** — NestJS controller + DTOs, depends on application only
 - **Infrastructure** — Prisma repository adapter, implements the application port
+- **Presentation** — NestJS controller + DTOs, depends on application only
 
-Module structure: `src/modules/{auth,users,students,exams}` — each module may have sub-features (e.g. `exams/exam`, `exams/versions`, `exams/keys`, `exams/corrections`). Shared code lives in `src/shared/`.
+Module structure: `src/modules/{auth,users,students,exams}` — sub-features under `exams/` (exam, question, versions, keys, student-answer, corrections, grade). Shared code in `src/shared/`.
 
 ## Design Principles
 
@@ -22,8 +22,8 @@ Apply **SOLID** at all times:
 - **S** — each class/module has one reason to change
 - **O** — extend behavior through new code, not by modifying existing code
 - **L** — subtypes must be substitutable for their base types
-- **I** — prefer small, focused interfaces over ports (adapters)
-- **D** — depend on abstractions (ports), not on concrete implementations (adapters)
+- **I** — prefer small, focused interfaces
+- **D** — depend on abstractions (ports), not on concrete implementations
 
 ## Code Style
 
@@ -38,7 +38,7 @@ Apply **SOLID** at all times:
 
 - **No inline comments** explaining what the code does — the code must be self-explanatory
 - **No console.log / console.info / console.debug** — remove them before finishing
-- `console.warn` and `console.error` are allowed only when genuinely necessary (unexpected states, degraded behavior)
+- `console.warn` and `console.error` are allowed only when genuinely necessary
 - Logger calls (via an injected logger port) are allowed at warn/error level in adapters
 
 ## Tests
@@ -50,24 +50,23 @@ Apply **SOLID** at all times:
 
 ## Stack
 
-- **Frontend:** Next.js + TypeScript
-- **Backend:** NestJS + TypeScript
+- **Backend:** NestJS + TypeScript (port 3001, Swagger at `/docs`)
+- **Frontend:** Next.js + TypeScript (port 3000)
+- **Database:** PostgreSQL + Prisma ORM
 - **Test:** Cucumber.js for acceptance tests, Jest for unit/integration tests
 
 ## Frontend Component Structure
 
 Components live in `src/components/` organized into four folders:
 
-- `primitives/` — shadcn/ui base components (button, input, badge, card, table, etc.). The `components.json` alias `"ui"` points here. Future `npx shadcn add` installs go here.
-- `shared/` — reusable cross-feature components (PageHeader, ConfirmDeleteDialog, EmptyState, StatusBadge, DataTable, etc.)
-- `layout/` — page/feature-specific components organized by feature subfolder (e.g. `layout/app/AppSidebar.tsx`, `layout/dashboard/DashboardStats.tsx`)
-- `providers/` — React context providers (AuthProvider, QueryProvider, etc.)
+- `primitives/` — shadcn/ui base components. `npx shadcn add` installs go here
+- `shared/` — reusable cross-feature components
+- `layout/` — page/feature-specific components organized by feature subfolder
+- `providers/` — React context providers
 
 Never use a flat `components/ui/` folder.
 
 ## Available Agents
-
-Autonomous subprocesses for analysis tasks — invoked by Claude when needed:
 
 - `reviewer` — audits code quality across Clean Architecture rules, SOLID, and TypeScript standards
 - `test-runner` — runs Jest/Cucumber, diagnoses failures with root cause analysis
@@ -76,7 +75,7 @@ Autonomous subprocesses for analysis tasks — invoked by Claude when needed:
 
 ## Available Skills (Slash Commands)
 
-- `/new-feature <name> <description>` — scaffold a complete feature (hexagonal architecture, Prisma, JWT, shadcn/ui)
+- `/new-feature <name> <description>` — scaffold a complete feature
 - `/write-gherkin <feature> <requirements>` — generate `.feature` file with Gherkin scenarios
 - `/prisma-migration <entity>` — generate Prisma model, migration SQL, and repository adapter
 - `/write-tests <file>` — generate Jest unit tests for a use case or domain entity

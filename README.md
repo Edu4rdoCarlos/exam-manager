@@ -1,79 +1,54 @@
 # Exam Manager
 
-## Motivation
+Sistema de criação e correção de provas acadêmicas com suporte a múltiplas versões, gabaritos e geração de notas.
 
-Academic assessment workflows often rely on fragmented, manual processes: teachers create exams in text editors, shuffle question versions by hand, grade answer sheets one by one, and calculate scores in separate spreadsheets. This approach is error-prone, time-consuming, and makes it hard to trace relationships between exam versions, answer keys, and final grades.
-
-**Exam Manager** centralizes and automates this entire cycle — from exam creation to grade report generation — in a structured, auditable, and extensible API.
-
-## Objective
-
-This project is an assignment for the course **Advanced Topics in Programming Languages I** at UFPE. Its central goal is to explore **AI agent-driven development**: the entire implementation was carried out in direct collaboration with autonomous AI agents (Claude Code), which acted as software engineers — reading requirements, making architectural decisions, writing code, running code reviews, and fixing issues iteratively.
-
-The aim is not only to build the system, but to investigate how language model agents can actively participate in a real software development cycle, from initial scaffolding all the way to production deployment.
-
-## What the system does
-
-- **Authentication** — JWT-based login for teachers
-- **Questions** — create, read, update, and delete questions with multiple-choice alternatives
-- **Exams** — create and manage exams by associating questions with ordinal positions
-- **Exam versions** — generate versions with shuffled questions and alternatives; export as PDF
-- **Answer keys** — register answer keys per version; export as CSV
-- **Student answers** — manual submission or bulk import via CSV
-- **Correction** — apply correction in `strict` or `lenient` mode; import answers and run correction from a single CSV file
-- **Grades** — query grades by version or correction; enriched report with student and exam details
+Desenvolvido para a disciplina **Tópicos Avançados em Linguagens de Programação I** na UFPE, com implementação conduzida por agentes de IA (Claude Code).
 
 ## Stack
 
-| Layer | Technology |
+| Camada | Tecnologia |
 |---|---|
 | Backend | NestJS + TypeScript |
-| Database | PostgreSQL + Prisma ORM |
-| API docs | Swagger (available at `/docs`) |
+| Banco de dados | PostgreSQL + Prisma ORM |
+| Frontend | Next.js + TypeScript |
 | Deploy | Railway |
 
-## Architecture
+## Como rodar localmente
 
-The backend follows **Clean Architecture** with strict layer separation:
-
-```
-src/modules/{feature}/
-  domain/          — entities and domain errors (no external dependencies)
-  application/     — use cases and ports (interfaces)
-  infrastructure/  — Prisma, CSV, and PDF adapters
-  presentation/    — NestJS controllers and DTOs
-```
-
-## Running locally
-
-**Prerequisites:** Node.js 20+, Docker
+**Pré-requisitos:** Node.js 20+, Docker
 
 ```bash
-# Start the database
+# Subir o banco
 docker compose up -d
 
-# Install dependencies
+# Instalar dependências
 npm install
 
-# Generate the Prisma client and apply migrations
-npm run generate --workspace=@exam-manager/database
-npm run migrate:dev --workspace=@exam-manager/database
+# Gerar o Prisma Client e aplicar migrations
+cd monorepo/database && npx prisma generate && npx prisma migrate deploy && cd ../..
 
-# Start the backend in development mode
-npm run start:dev --workspace=@exam-manager/backend
+# Backend (http://localhost:3001, Swagger em /docs)
+cd monorepo/backend && npm run start:dev
+
+# Frontend (http://localhost:3000)
+cd monorepo/frontend && npm run dev
 ```
 
-The API will be available at `http://localhost:3001` and Swagger at `http://localhost:3001/docs`.
+## Variáveis de ambiente
 
-## Environment variables
+Copie `monorepo/backend/.env.example` para `monorepo/backend/.env`. Os valores padrão já funcionam com o Docker Compose.
 
-Create a `.env` file at the project root:
+## Funcionalidades
 
-```env
-DATABASE_URL=postgresql://exam_manager:exam_manager@localhost:5432/exam_manager
-JWT_SECRET=your-secret-key
-```
+- Autenticação JWT para professores
+- Criação de questões com alternativas de múltipla escolha
+- Criação de provas associando questões
+- Geração de versões com embaralhamento automático + exportação PDF
+- Gabaritos por versão + exportação CSV
+- Importação de respostas dos alunos via CSV
+- Correção em modo `strict` ou `lenient`
+- Consulta de notas por versão ou correção
 
-## Deployment
+## Deploy
 
-The project is configured for deployment on **Railway** via `Dockerfile` and `railway.toml`. Connect the repository, add the PostgreSQL plugin, and set the `DATABASE_URL` and `JWT_SECRET` environment variables. Migrations are applied automatically on container startup.
+Configurado para **Railway** via `Dockerfile` e `railway.toml`. Conecte o repositório, adicione o plugin PostgreSQL e configure `DATABASE_URL` e `JWT_SECRET`. As migrations são aplicadas automaticamente na inicialização.
