@@ -8,7 +8,9 @@ import { apiKeyMiddleware } from './shared/middleware/apiKeyMiddleware';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:3000' });
+  app.enableCors({
+    origin: ['http://localhost:3000', 'https://exam-manager-frontend-mu.vercel.app'],
+  });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
