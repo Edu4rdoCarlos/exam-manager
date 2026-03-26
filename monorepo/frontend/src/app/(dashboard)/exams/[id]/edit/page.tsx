@@ -103,7 +103,7 @@ export default function EditExamPage() {
         description={exam?.title}
       />
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div className="flex flex-col gap-1.5">
