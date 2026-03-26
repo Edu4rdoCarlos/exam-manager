@@ -2,7 +2,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { toast } from "sonner";
 import { getMe } from "@/lib/api/users";
 import { deleteExam } from "@/lib/api/exams";
@@ -21,7 +20,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/primitive
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/primitives/skeleton";
-import { Plus, Pencil, Trash2, Eye, BookOpen, FileText } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  BookOpen,
+  GraduationCap,
+  CalendarCheck,
+  CalendarClock,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { UserMeExam } from "@/lib/types";
 
 const FORMAT_LABELS: Record<string, string> = {
@@ -32,6 +41,51 @@ const FORMAT_LABELS: Record<string, string> = {
 function formatDate(value: string | null): string {
   if (!value) return "—";
   return new Date(value).toLocaleDateString("pt-BR");
+}
+
+function isFuture(dateStr: string | null): boolean {
+  if (!dateStr) return false;
+  return new Date(dateStr) >= new Date(new Date().toDateString());
+}
+
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  icon: LucideIcon;
+  sub?: string;
+  colorClass: string;
+}
+
+function StatCard({ label, value, icon: Icon, sub, colorClass }: StatCardProps) {
+  return (
+    <Card className="group bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-border/50 shadow-md hover:shadow-lg transition-all duration-200 hover:bg-primary/5 overflow-hidden">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1 min-w-0">
+            <p className="text-sm font-medium text-muted-foreground">{label}</p>
+            <p className="text-2xl font-bold text-foreground truncate">{value}</p>
+            {sub && <p className="text-xs text-muted-foreground truncate">{sub}</p>}
+          </div>
+          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${colorClass} group-hover:scale-110 transition-transform duration-200`}>
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-xl" />
+        ))}
+      </div>
+      <Skeleton className="h-64 w-full rounded-xl" />
+    </div>
+  );
 }
 
 export default function DashboardPage() {
@@ -49,57 +103,58 @@ export default function DashboardPage() {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       toast.success("Prova excluída");
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
+    onError: (err: Error) => toast.error(err.message),
   });
 
-  if (isPending) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
+  if (isPending) return <DashboardSkeleton />;
 
   const exams: UserMeExam[] = me?.exams ?? [];
 
+  const uniqueSubjects = new Set(exams.map((e) => e.subject)).size;
+  const upcoming = exams
+    .filter((e) => isFuture(e.examDate))
+    .sort((a, b) => new Date(a.examDate!).getTime() - new Date(b.examDate!).getTime());
+  const nextExam = upcoming[0] ?? null;
+
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title={`Olá, ${me?.name ?? "Professor"}`}
-        description="Gerencie suas provas e questões"
+        description="Visão geral das suas provas e atividades"
       />
 
-      <div className="grid grid-cols-2 gap-4 mb-6 max-w-sm">
-        <Card>
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Provas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
-              <span className="text-2xl font-bold">{exams.length}</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Questões</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              <Link href="/questions" className="text-2xl font-bold text-primary hover:underline">
-                Ver banco
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label="Total de Provas"
+          value={exams.length}
+          icon={BookOpen}
+          sub={exams.length === 1 ? "1 prova criada" : `${exams.length} provas criadas`}
+          colorClass="bg-primary/10 text-primary"
+        />
+        <StatCard
+          label="Disciplinas"
+          value={uniqueSubjects}
+          icon={GraduationCap}
+          sub={uniqueSubjects === 1 ? "1 disciplina" : `${uniqueSubjects} disciplinas únicas`}
+          colorClass="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+        />
+        <StatCard
+          label="Agendadas"
+          value={upcoming.length}
+          icon={CalendarCheck}
+          sub={upcoming.length === 0 ? "Nenhuma data futura" : `${upcoming.length} com data futura`}
+          colorClass="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+        />
+        <StatCard
+          label="Próxima Prova"
+          value={nextExam ? formatDate(nextExam.examDate) : "—"}
+          icon={CalendarClock}
+          sub={nextExam ? nextExam.title : "Nenhuma agendada"}
+          colorClass="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+        />
       </div>
 
-      <Card>
+      <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-border/50 shadow-md">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Minhas Provas</CardTitle>
           <Button size="sm" onClick={() => router.push("/exams/new")}>
@@ -125,7 +180,7 @@ export default function DashboardPage() {
                 <TableRow>
                   <TableHead>Título</TableHead>
                   <TableHead>Disciplina</TableHead>
-                  <TableHead>Data</TableHead>
+                  <TableHead>Data da Prova</TableHead>
                   <TableHead>Formato</TableHead>
                   <TableHead>Criada em</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -136,7 +191,15 @@ export default function DashboardPage() {
                   <TableRow key={exam.id}>
                     <TableCell className="font-medium">{exam.title}</TableCell>
                     <TableCell>{exam.subject}</TableCell>
-                    <TableCell>{formatDate(exam.examDate)}</TableCell>
+                    <TableCell>
+                      {exam.examDate ? (
+                        <span className={isFuture(exam.examDate) ? "text-emerald-600 font-medium" : ""}>
+                          {formatDate(exam.examDate)}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
                         {FORMAT_LABELS[exam.answerFormat] ?? exam.answerFormat}

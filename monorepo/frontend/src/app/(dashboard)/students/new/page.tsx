@@ -44,7 +44,7 @@ export default function NewStudentPage() {
         }
       />
 
-      <form onSubmit={handleSubmit} className="max-w-md">
+      <form onSubmit={handleSubmit} className="max-w-md mx-auto">
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div className="flex flex-col gap-1.5">
