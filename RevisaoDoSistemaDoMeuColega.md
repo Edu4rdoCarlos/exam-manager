@@ -7,7 +7,7 @@
 
 ## O sistema está funcionando com as funcionalidades solicitadas?
 
-Sim, o sistema de Jailson funciona bem. As funcionalidades foram devidamente implementadas. O sistema contempla gestão de provas, geração de PDFs de questões e de gabarito conforme a versão da prova, também está previsto o gerenciamento de questões e correção de provas. Sobre esse ponto, as funcionalidades está clara lá se o usuário entender o que o sistema vai contemplar. O UX não está muito intuitivo sobre as funcionalidades, poderia estar mais separadas as responsabilidades por interface.
+Sim, o sistema de Jailson funciona bem. As funcionalidades foram devidamente implementadas. O sistema contempla gestão de provas, geração de PDFs de questões e de gabarito conforme a versão da prova, também está previsto o gerenciamento de questões e correção de provas. Sobre esse ponto, as funcionalidades está clara. Ficou ótimo.
 
 ---
 
