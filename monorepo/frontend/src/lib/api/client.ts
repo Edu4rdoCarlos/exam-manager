@@ -1,7 +1,7 @@
 "use client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? "";
+const API_KEY = process.env.NEXT_PUBLIC_EXAM_MANAGER_API_KEY ?? "";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;

@@ -8,7 +8,8 @@ export function apiKeyMiddleware(req: Request, res: Response, next: NextFunction
     return;
   }
 
-  const apiKey = process.env.API_KEY;
+  const apiKey = process.env.EXAM_MANAGER_API_KEY;
+
 
   if (req.headers['x-api-key'] !== apiKey) {
     res.status(403).json({ statusCode: 403, message: 'Forbidden' });
