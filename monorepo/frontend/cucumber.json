@@ -1,0 +1,12 @@
+{
+  "default": {
+    "paths": ["tests/acceptance/features/**/*.feature"],
+    "require": [
+      "tests/acceptance/support/**/*.ts",
+      "tests/acceptance/step-definitions/**/*.ts"
+    ],
+    "requireModule": ["ts-node/register"],
+    "format": ["@cucumber/pretty-formatter"],
+    "timeout": 30000
+  }
+}

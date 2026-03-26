@@ -12,6 +12,7 @@ interface JwtPayload {
 interface AuthContextValue {
   user: JwtPayload | null;
   token: string | null;
+  loading: boolean;
   login: (token: string) => void;
   logout: () => void;
 }
@@ -23,6 +24,7 @@ const TOKEN_KEY = "exam_manager_token";
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<JwtPayload | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem(TOKEN_KEY);
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(TOKEN_KEY);
       }
     }
+    setLoading(false);
   }, []);
 
   function login(newToken: string) {
@@ -55,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

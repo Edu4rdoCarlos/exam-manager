@@ -12,15 +12,15 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (user === null) {
+    if (!loading && user === null) {
       router.replace("/login");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
-  if (user === null) return null;
+  if (loading || user === null) return null;
 
   return (
     <div className="flex h-screen overflow-hidden">

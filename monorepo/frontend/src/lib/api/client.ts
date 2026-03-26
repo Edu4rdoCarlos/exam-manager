@@ -46,8 +46,10 @@ export async function apiRequest<T>(
   });
 
   if (response.status === 401) {
-    localStorage.removeItem("exam_manager_token");
-    window.location.href = "/login";
+    if (window.location.pathname !== "/login") {
+      localStorage.removeItem("exam_manager_token");
+      window.location.href = "/login";
+    }
     throw new Error("Unauthorized");
   }
 
