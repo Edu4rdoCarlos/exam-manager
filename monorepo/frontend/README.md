@@ -1,6 +1,6 @@
 # Frontend — Exam Manager
 
-Next.js + TypeScript. Interface web disponível em `[http://localhost:3000](https://exam-manager-frontend-ln4ncduis-edu4rdocs-projects.vercel.app?_vercel_share=wpcddqul9xHVogd6E1ko0KKu4WxOk1H1)`.
+Next.js + TypeScript. Interface web disponível em `http://localhost:3000](https://exam-manager-frontend-ln4ncduis-edu4rdocs-projects.vercel.app?_vercel_share=wpcddqul9xHVogd6E1ko0KKu4WxOk1H1`.
 
 ## Como rodar
 
