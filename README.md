@@ -52,3 +52,7 @@ Copie `monorepo/backend/.env.example` para `monorepo/backend/.env`. Os valores p
 ## Deploy
 
 Configurado para **Railway** via `Dockerfile` e `railway.toml`. Conecte o repositório, adicione o plugin PostgreSQL e configure `DATABASE_URL` e `JWT_SECRET`. As migrations são aplicadas automaticamente na inicialização.
+
+## Anexos
+<img width="1510" height="782" alt="image" src="https://github.com/user-attachments/assets/4c76433d-21a6-41c5-a2d3-c39b8ae39d31" />
+
