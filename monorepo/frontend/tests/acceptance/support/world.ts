@@ -2,7 +2,7 @@ import { setWorldConstructor, World, IWorldOptions } from '@cucumber/cucumber';
 import { Browser, BrowserContext, Page } from 'playwright';
 
 export const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:3000';
-export const API_URL = process.env.API_URL ?? 'http://localhost:3001';
+export const API_URL = process.env.API_URL ?? 'http://localhost:3002';
 export const API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? 'dev-api-key';
 export const TOKEN_KEY = 'exam_manager_token';
 

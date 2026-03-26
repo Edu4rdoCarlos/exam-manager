@@ -17,14 +17,16 @@ When('I fill in the question statement with {string}', { timeout: 15000 }, async
   await this.page.fill('#statement', statement);
 });
 
-When('I fill in the first alternative with {string}', async function (this: ExamManagerWorld, text: string) {
-  const inputs = this.page.locator('input[placeholder^="Alternativa"]');
-  await inputs.nth(0).fill(text);
+When('I fill in the first alternative with {string}', { timeout: 10000 }, async function (this: ExamManagerWorld, text: string) {
+  const input = this.page.locator('input[placeholder^="Descrição da alternativa A"]');
+  await input.waitFor({ timeout: 8000 });
+  await input.fill(text);
 });
 
-When('I fill in the second alternative with {string}', async function (this: ExamManagerWorld, text: string) {
-  const inputs = this.page.locator('input[placeholder^="Alternativa"]');
-  await inputs.nth(1).fill(text);
+When('I fill in the second alternative with {string}', { timeout: 10000 }, async function (this: ExamManagerWorld, text: string) {
+  const input = this.page.locator('input[placeholder^="Descrição da alternativa B"]');
+  await input.waitFor({ timeout: 8000 });
+  await input.fill(text);
 });
 
 When('I save the question', { timeout: 15000 }, async function (this: ExamManagerWorld) {
